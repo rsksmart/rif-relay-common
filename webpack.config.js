@@ -1,7 +1,8 @@
 const path = require('path');
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
-    entry: './index.ts',
+    entry: './src/index.ts',
     mode: 'production',
     target: 'node',
     module: {
@@ -15,6 +16,7 @@ module.exports = {
     },
     resolve: {
         extensions: ['.tsx', '.ts', '.js', '.json'],
+        modules: ["node_modules"]
     },
     output: {
         filename: 'index.js',
@@ -24,5 +26,6 @@ module.exports = {
     performance: {
         maxEntrypointSize: 5120000,
         maxAssetSize: 5120000
-    }
+    },
+    externals: [nodeExternals()]
 };

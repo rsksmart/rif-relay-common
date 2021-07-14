@@ -1,0 +1,21 @@
+import BN from 'bn.js';
+export declare const constants: {
+    dayInSec: number;
+    weekInSec: number;
+    oneEther: BN;
+    ZERO_ADDRESS: string;
+    ZERO_BYTES32: string;
+    MAX_UINT256: BN;
+    MAX_INT256: BN;
+    MIN_INT256: BN;
+    SHA3_NULL_S: string;
+    TRANSACTION_CREATE_CONTRACT_GAS_COST: number;
+    TRANSACTION_GAS_COST: number;
+    TX_ZERO_DATA_GAS_COST: number;
+    TX_NO_ZERO_DATA_GAS_COST: number;
+    MAX_ESTIMATED_GAS_DEVIATION: number;
+    ESTIMATED_GAS_CORRECTION_FACTOR: number;
+    INTERNAL_TRANSACTION_ESTIMATE_CORRECTION: number;
+    WAIT_FOR_RECEIPT_RETRIES: number;
+    WAIT_FOR_RECEIPT_INITIAL_BACKOFF: number;
+};
