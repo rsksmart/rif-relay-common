@@ -75,7 +75,7 @@ export type Web3Provider =
   | IpcProvider
   | WebsocketProvider;
 
-export default class ContractInteractor {
+export class ContractInteractor {
   private readonly VERSION = '2.0.1';
 
   private readonly IRelayVerifierContract: Contract<IRelayVerifierInstance>;

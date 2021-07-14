@@ -1,6 +1,6 @@
 import { PrefixedHexString } from 'ethereumjs-tx';
 
-export default interface EnvelopingTransactionDetails {
+export interface EnvelopingTransactionDetails {
   // Added by the Web3 call stack:
   readonly from: string;
   readonly data: PrefixedHexString;
