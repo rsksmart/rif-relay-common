@@ -6,7 +6,7 @@ import { BlockNumber, HttpProvider, IpcProvider, provider, Transaction, Transact
 import { DeployRequest, RelayRequest } from './EIP712/RelayRequest';
 import { IForwarderInstance, IRelayVerifierInstance, IRelayHubInstance, IDeployVerifierInstance, IWalletFactoryInstance, ITokenHandlerInstance } from '@rsksmart/rif-relay-contracts/types/truffle-contracts';
 import { EnvelopingConfig } from './types/EnvelopingConfig';
-import EnvelopingTransactionDetails from './types/EnvelopingTransactionDetails';
+import { EnvelopingTransactionDetails } from './types/EnvelopingTransactionDetails';
 import BN from 'bn.js';
 import { DeployTransactionRequest, RelayTransactionRequest } from './types/RelayTransactionRequest';
 declare type EventName = string;
@@ -25,7 +25,7 @@ export declare const StakeUnlocked: EventName;
 export declare const StakeWithdrawn: EventName;
 export declare const StakePenalized: EventName;
 export declare type Web3Provider = HttpProvider | IpcProvider | WebsocketProvider;
-export default class ContractInteractor {
+export declare class ContractInteractor {
     private readonly VERSION;
     private readonly IRelayVerifierContract;
     private readonly IDeployVerifierContract;

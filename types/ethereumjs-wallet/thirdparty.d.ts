@@ -32,4 +32,4 @@ declare const Thirdparty: {
   fromKryptoKit: typeof fromKryptoKit
   fromQuorumWallet: typeof fromQuorumWallet
 };
-export Thirdparty;
+export default Thirdparty;

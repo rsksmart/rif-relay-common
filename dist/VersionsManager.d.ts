@@ -1,4 +1,4 @@
-export default class VersionsManager {
+export declare class VersionsManager {
     readonly componentVersion: string;
     /**
      * @param componentVersion - a semver of a component that uses the VersionsManager

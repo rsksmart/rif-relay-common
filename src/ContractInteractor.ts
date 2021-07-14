@@ -33,10 +33,10 @@ import {
 } from '@rsksmart/rif-relay-contracts/types/truffle-contracts';
 import { event2topic, sleep } from './Utils';
 import { constants } from './Constants';
-import replaceErrors from './ErrorReplacerJSON';
-import VersionsManager from './VersionsManager';
+import {replaceErrors} from './ErrorReplacerJSON';
+import {VersionsManager} from './VersionsManager';
 import { EnvelopingConfig } from './types/EnvelopingConfig';
-import EnvelopingTransactionDetails from './types/EnvelopingTransactionDetails';
+import {EnvelopingTransactionDetails} from './types/EnvelopingTransactionDetails';
 import { toBN, toHex } from 'web3-utils';
 import BN from 'bn.js';
 import { DeployTransactionRequest, RelayTransactionRequest } from './types/RelayTransactionRequest';
