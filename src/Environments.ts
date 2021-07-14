@@ -3,7 +3,7 @@
  * So far the only conflict we will have is migration to Istanbul, as ETC does not integrate it as of this writing.
  * TODO: see the differences between networks we want to support and make project structure multi-chain
  */
-import { RelayHubConfiguration } from './types/RelayHubConfiguration'
+import { RelayHubConfiguration } from './types/RelayHubConfiguration';
 
 export interface Environment {
   readonly chainId: number
@@ -16,7 +16,7 @@ const defaultRelayHubConfiguration: RelayHubConfiguration = {
   minimumStake: 1e18.toString(),
   minimumUnstakeDelay: 1000,
   minimumEntryDepositValue: 1e18.toString()
-}
+};
 
 export const environments: { [key: string]: Environment } = {
   istanbul: {
@@ -34,17 +34,17 @@ export const environments: { [key: string]: Environment } = {
     relayHubConfiguration: defaultRelayHubConfiguration,
     mintxgascost: 21000
   }
-}
+};
 
-export const defaultEnvironment = environments.rsk
+export const defaultEnvironment = environments.rsk;
 
 export function getEnvironment (networkName: string): Environment {
   if (networkName.startsWith('rsk')) {
-    return environments.rsk
+    return environments.rsk;
   }
-  return defaultEnvironment
+  return defaultEnvironment;
 }
 
 export function isRsk (environment: Environment): boolean {
-  return environment.chainId === 33
+  return environment.chainId === 33;
 }

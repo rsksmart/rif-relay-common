@@ -1,6 +1,6 @@
 
-export { default as hdkey } from './hdkey'
-export { default as thirdparty } from './thirdparty'
+export { default as hdkey } from './hdkey';
+export { default as thirdparty } from './thirdparty';
 interface V3Params {
   kdf: string
   cipher: string
@@ -26,7 +26,7 @@ interface PBKDFParamsOut {
   prf: string
   salt: string
 }
-declare type KDFParamsOut = ScryptKDFParamsOut | PBKDFParamsOut
+declare type KDFParamsOut = ScryptKDFParamsOut | PBKDFParamsOut;
 interface V1Keystore {
   Address: string
   Crypto: {
@@ -70,8 +70,8 @@ interface EthSaleKeystore {
   email: string
 }
 export default class Wallet {
-  private readonly privateKey?
-  private readonly publicKey
+  private readonly privateKey?;
+  private readonly publicKey;
   constructor(privateKey?: Buffer | undefined, publicKey?: Buffer | undefined)
   /**
    * Create an instance based on a new random key.

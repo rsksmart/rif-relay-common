@@ -6,7 +6,9 @@
   "scripts": {
     "build": "scripts/build",
     "dist": "scripts/dist",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix"
   },
   "author": "Relaying Services Team",
   "license": "MIT",
@@ -39,6 +41,9 @@
     "patch-package": "^6.4.6"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.28.3",
+    "@typescript-eslint/parser": "^4.28.3",
+    "eslint": "^7.30.0",
     "ts-loader": "^9.2.3",
     "ts-node": "8.6.2",
     "typescript": "^4.3.5",

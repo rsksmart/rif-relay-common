@@ -1,4 +1,4 @@
-import { LogLevelNumbers } from 'loglevel'
+import { LogLevelNumbers } from 'loglevel';
 
 export interface ServerConfigParams {
     url: string

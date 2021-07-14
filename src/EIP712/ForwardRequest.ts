@@ -1,4 +1,4 @@
-import { PrefixedHexString } from 'ethereumjs-tx'
+import { PrefixedHexString } from 'ethereumjs-tx';
 
 export interface ForwardRequest {
   relayHub: string

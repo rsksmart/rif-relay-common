@@ -1,16 +1,16 @@
-import semver from 'semver'
+import semver from 'semver';
 
 export default class VersionsManager {
-  readonly componentVersion: string
+  readonly componentVersion: string;
 
   /**
    * @param componentVersion - a semver of a component that uses the VersionsManager
    */
   constructor (componentVersion: string) {
     if (semver.valid(componentVersion) == null) {
-      throw new Error('Component version is not valid')
+      throw new Error('Component version is not valid');
     }
-    this.componentVersion = componentVersion
+    this.componentVersion = componentVersion;
   }
 
   /**
@@ -19,9 +19,9 @@ export default class VersionsManager {
    */
   isMinorSameOrNewer (version: string): boolean {
     // prevent crash with some early verifiers (which are otherwise perfectly valid)
-    version = version.replace('_', '-')
+    version = version.replace('_', '-');
 
-    const range = '^' + this.componentVersion
-    return semver.satisfies(version, range)
+    const range = '^' + this.componentVersion;
+    return semver.satisfies(version, range);
   }
 }

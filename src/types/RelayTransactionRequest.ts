@@ -1,6 +1,6 @@
-import { PrefixedHexString } from 'ethereumjs-tx'
-import ow from 'ow'
-import { DeployRequest, RelayRequest } from '../EIP712/RelayRequest'
+import { PrefixedHexString } from 'ethereumjs-tx';
+import ow from 'ow';
+import { DeployRequest, RelayRequest } from '../EIP712/RelayRequest';
 
 export interface RelayMetadata {
   relayHubAddress: string
@@ -45,7 +45,7 @@ export const DeployTransactionRequestShape = {
     relayMaxNonce: ow.number,
     signature: ow.string
   }
-}
+};
 
 export const RelayTransactionRequestShape = {
   relayRequest: {
@@ -74,4 +74,4 @@ export const RelayTransactionRequestShape = {
     relayMaxNonce: ow.number,
     signature: ow.string
   }
-}
+};

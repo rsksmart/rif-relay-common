@@ -1,7 +1,7 @@
 
-import Wallet from './index'
+import Wallet from './index';
 export default class EthereumHDKey {
-  private readonly _hdkey?
+  private readonly _hdkey?;
   /**
   * Creates an instance based on a seed.
   *

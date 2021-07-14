@@ -3,19 +3,19 @@ export default function replaceErrors (key: string, value: { [key: string]: any 
     return {
       dataType: 'Map',
       value: Array.from(value.entries())
-    }
+    };
   } else if (value instanceof Error) {
-    const error: { [key: string]: any } = {}
+    const error: { [key: string]: any } = {};
 
     // remove "circular referenced" objects we don't really want to log...
     Object.getOwnPropertyNames(value).filter(e => !['request', 'response'].includes(e)).forEach(function (key) {
       error[key] =
         // @ts-ignore
-        value[key]
-    })
+        value[key];
+    });
 
-    return error
+    return error;
   }
 
-  return value
+  return value;
 }

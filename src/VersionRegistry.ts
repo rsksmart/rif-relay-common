@@ -1,17 +1,17 @@
 // accessor class for the on-chain version registry
-import { PrefixedHexString } from 'ethereumjs-tx'
-import { bufferToHex } from 'ethereumjs-util'
-import { Contract } from 'web3-eth-contract'
-import { IVersionRegistry } from '@rsksmart/rif-relay-contracts'
-import Web3 from 'web3'
+import { PrefixedHexString } from 'ethereumjs-tx';
+import { bufferToHex } from 'ethereumjs-util';
+import { Contract } from 'web3-eth-contract';
+import { IVersionRegistry } from '@rsksmart/rif-relay-contracts';
+import Web3 from 'web3';
 
 export function string32 (s: string): PrefixedHexString {
-  return bufferToHex(Buffer.from(s)).padEnd(66, '0')
+  return bufferToHex(Buffer.from(s)).padEnd(66, '0');
 }
 
 // convert a bytes32 into a string, removing any trailing zeros
 export function bytes32toString (s: PrefixedHexString): string {
-  return Buffer.from(s.replace(/^(?:0x)?(.*?)(00)*$/, '$1'), 'hex').toString()
+  return Buffer.from(s.replace(/^(?:0x)?(.*?)(00)*$/, '$1'), 'hex').toString();
 }
 
 export interface VersionInfo {
@@ -23,24 +23,24 @@ export interface VersionInfo {
 }
 
 export class VersionRegistry {
-  registryContract: Contract
-  web3: Web3
+  registryContract: Contract;
+  web3: Web3;
 
   constructor (web3provider: any, registryAddress: PrefixedHexString, readonly sendOptions = {}) {
-    this.web3 = new Web3(web3provider)
-    this.registryContract = new this.web3.eth.Contract(IVersionRegistry.abi as any, registryAddress)
+    this.web3 = new Web3(web3provider);
+    this.registryContract = new this.web3.eth.Contract(IVersionRegistry.abi as any, registryAddress);
   }
 
   async isValid (): Promise<boolean> {
     // validate the contract exists, and has the registry API
     // Check added for RSKJ: when the contract does not exist in RSKJ it replies to the getCode call with 0x00
-    const code = await this.web3.eth.getCode(this.registryContract.options.address)
-    if (code === '0x' || code === '0x00') { return false }
+    const code = await this.web3.eth.getCode(this.registryContract.options.address);
+    if (code === '0x' || code === '0x00') { return false; }
     // this check return 'true' only for owner
     // return this.registryContract.methods.addVersion('0x414243', '0x313233', '0x313233').estimateGas(this.sendOptions)
     //   .then(() => true)
     //   .catch(() => false)
-    return true
+    return true;
   }
 
   /**
@@ -58,15 +58,15 @@ export class VersionRegistry {
     const [versions, now] = await Promise.all([
       this.getAllVersions(id),
       this.web3.eth.getBlock('latest').then(b => b.timestamp as number)
-    ])
+    ]);
 
     const ver = versions
-      .find(v => !v.canceled && (v.time + delayPeriod <= now || v.version === optInVersion))
+      .find(v => !v.canceled && (v.time + delayPeriod <= now || v.version === optInVersion));
     if (ver == null) {
-      throw new Error(`getVersion(${id}) - no version found`)
+      throw new Error(`getVersion(${id}) - no version found`);
     }
 
-    return ver
+    return ver;
   }
 
   /**
@@ -74,14 +74,14 @@ export class VersionRegistry {
    * @param id object id to return version history for
    */
   async getAllVersions (id: string): Promise<VersionInfo[]> {
-    const events = await this.registryContract.getPastEvents('allEvents', { fromBlock: 1, topics: [null, string32(id)] })
+    const events = await this.registryContract.getPastEvents('allEvents', { fromBlock: 1, topics: [null, string32(id)] });
     // map of ver=>reason, for every canceled version
     const cancelReasons: { [key: string]: string } = events.filter(e => e.event === 'VersionCanceled').reduce((set, e) => ({
       ...set,
       [e.returnValues.version]: e.returnValues.reason
-    }), {})
+    }), {});
 
-    const found = new Set<string>()
+    const found = new Set<string>();
     return events
       .filter(e => e.event === 'VersionAdded')
       .map(e => ({
@@ -94,38 +94,38 @@ export class VersionRegistry {
       .filter(e => {
         // use only the first occurrence of each version
         if (found.has(e.version)) {
-          return false
+          return false;
         } else {
-          found.add(e.version)
-          return true
+          found.add(e.version);
+          return true;
         }
       })
-      .reverse()
+      .reverse();
   }
 
   // return all IDs registered
   async listIds (): Promise<string[]> {
-    const events = await this.registryContract.getPastEvents('VersionAdded', { fromBlock: 1 })
-    const ids = new Set(events.map(e => bytes32toString(e.returnValues.id)))
-    return Array.from(ids)
+    const events = await this.registryContract.getPastEvents('VersionAdded', { fromBlock: 1 });
+    const ids = new Set(events.map(e => bytes32toString(e.returnValues.id)));
+    return Array.from(ids);
   }
 
   async addVersion (id: string, version: string, value: string, sendOptions = {}): Promise<void> {
-    await this.checkVersion(id, version, false)
+    await this.checkVersion(id, version, false);
     await this.registryContract.methods.addVersion(string32(id), string32(version), value)
-      .send({ ...this.sendOptions, ...sendOptions })
+      .send({ ...this.sendOptions, ...sendOptions });
   }
 
   async cancelVersion (id: string, version: string, cancelReason = '', sendOptions = {}): Promise<void> {
-    await this.checkVersion(id, version, true)
+    await this.checkVersion(id, version, true);
     await this.registryContract.methods.cancelVersion(string32(id), string32(version), cancelReason)
-      .send({ ...this.sendOptions, ...sendOptions })
+      .send({ ...this.sendOptions, ...sendOptions });
   }
 
   private async checkVersion (id: string, version: string, validateExists: boolean): Promise<void> {
-    const versions = await this.getAllVersions(id).catch(() => [])
+    const versions = await this.getAllVersions(id).catch(() => []);
     if ((versions.find(v => v.version === version) != null) !== validateExists) {
-      throw new Error(`version ${validateExists ? 'does not exist' : 'already exists'}: ${id} @ ${version}`)
+      throw new Error(`version ${validateExists ? 'does not exist' : 'already exists'}: ${id} @ ${version}`);
     }
   }
 }

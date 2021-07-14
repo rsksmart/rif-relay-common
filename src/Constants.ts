@@ -1,9 +1,9 @@
-import BN from 'bn.js'
-import { toBN } from 'web3-utils'
+import BN from 'bn.js';
+import { toBN } from 'web3-utils';
 
-const dayInSec = 24 * 60 * 60
-const weekInSec = dayInSec * 7
-const oneEther = toBN(1e18)
+const dayInSec = 24 * 60 * 60;
+const weekInSec = dayInSec * 7;
+const oneEther = toBN(1e18);
 
 export const constants = {
   dayInSec,
@@ -25,4 +25,4 @@ export const constants = {
   INTERNAL_TRANSACTION_ESTIMATE_CORRECTION: 20000, // When estimating the gas an internal call is going to spend, we need to substract some gas inherent to send the parameters to the blockchain
   WAIT_FOR_RECEIPT_RETRIES: 6,
   WAIT_FOR_RECEIPT_INITIAL_BACKOFF: 1000
-}
+};
