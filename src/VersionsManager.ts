@@ -1,6 +1,6 @@
 import semver from 'semver';
 
-export class VersionsManager {
+export default class VersionsManager {
   readonly componentVersion: string;
 
   /**

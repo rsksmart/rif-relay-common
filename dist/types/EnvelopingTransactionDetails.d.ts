@@ -1,5 +1,5 @@
 import { PrefixedHexString } from 'ethereumjs-tx';
-export interface EnvelopingTransactionDetails {
+export default interface EnvelopingTransactionDetails {
     readonly from: string;
     readonly data: PrefixedHexString;
     readonly to: string;

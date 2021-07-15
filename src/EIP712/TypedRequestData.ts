@@ -86,7 +86,7 @@ export function getDomainSeparatorHash (verifier: string, chainId: number): Pref
   return bufferToHex(TypedDataUtils.hashStruct('EIP712Domain', getDomainSeparator(verifier, chainId), { EIP712Domain: EIP712DomainType }));
 }
 
-export class TypedRequestData implements EIP712TypedData {
+export default class TypedRequestData implements EIP712TypedData {
   readonly types: Types;
   readonly domain: EIP712Domain;
   readonly primaryType: string;

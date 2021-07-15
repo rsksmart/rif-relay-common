@@ -1,3 +1,3 @@
-export interface TokenResponse {
+export default interface TokenResponse {
     [verifier: string]: string[];
 }

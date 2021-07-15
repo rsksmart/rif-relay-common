@@ -1,4 +1,4 @@
-import {RelayData} from './RelayData';
+import RelayData from './RelayData';
 import { ForwardRequest, DeployRequestStruct } from './ForwardRequest';
 
 export interface RelayRequest {

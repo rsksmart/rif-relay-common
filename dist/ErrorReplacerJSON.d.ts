@@ -1,3 +1,3 @@
-export declare function replaceErrors(key: string, value: {
+export default function replaceErrors(key: string, value: {
     [key: string]: any;
 }): any;

@@ -25,7 +25,7 @@ export declare const DomainSeparatorType: {
 };
 export declare function getDomainSeparator(verifyingContract: string, chainId: number): EIP712Domain;
 export declare function getDomainSeparatorHash(verifier: string, chainId: number): PrefixedHexString;
-export declare class TypedRequestData implements EIP712TypedData {
+export default class TypedRequestData implements EIP712TypedData {
     readonly types: Types;
     readonly domain: EIP712Domain;
     readonly primaryType: string;

@@ -1,4 +1,4 @@
-export interface PingResponse {
+export default interface PingResponse {
   relayWorkerAddress: string;
   relayManagerAddress: string;
   relayHubAddress: string;

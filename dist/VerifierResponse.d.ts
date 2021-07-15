@@ -1,3 +1,3 @@
-export interface VerifierResponse {
+export default interface VerifierResponse {
     trustedVerifiers: string[];
 }
