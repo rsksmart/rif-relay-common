@@ -3,6 +3,10 @@
 This typescript repository contains all the common code used by the Rif Relay System.
 This project works as a dependency and needs to be installed in order to be used.
 
+### Pre-Requisites
+
+* Node version 12.18
+
 #### How to use it
 
 You can use this dependency once you have it installed on your project. You have a few
