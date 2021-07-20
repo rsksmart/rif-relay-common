@@ -12,6 +12,7 @@ import { PrefixedHexString } from 'ethereumjs-tx';
 
 //@ts-ignore
 import sourceMapSupport from 'source-map-support';
+//@ts-ignore
 sourceMapSupport.install({ errorFormatterForce: true });
 
 export const EIP712DomainType = [
