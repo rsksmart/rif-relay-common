@@ -6,9 +6,15 @@
   "scripts": {
     "build": "scripts/build",
     "dist": "scripts/dist",
-    "postinstall": "patch-package",
+    "_postinstall": "scripts/postinstall",
     "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix"
+    "lint:fix": "eslint . --ext .ts --fix",
+    "prepublishOnly": "scripts/prepublishOnly",
+    "postpublish": "scripts/postpublish",
+    "publishManually": "scripts/publishManually",
+    "switchPostInstall": "scripts/switchPostInstall",
+    "prettier:fix": "npx prettier --write --ignore-unknown .",
+    "prettier": "npx prettier --check ."
   },
   "author": "Relaying Services Team",
   "license": "MIT",
@@ -52,6 +58,9 @@
     "typescript": "^4.3.5",
     "webpack": "^5.43.0",
     "webpack-cli": "^4.7.2",
-    "webpack-node-externals": "^3.0.0"
+    "webpack-node-externals": "^3.0.0",
+    "husky": "^6.0.0",
+    "pinst": "^2.1.6",
+    "prettier": "2.3.0"
   }
 }

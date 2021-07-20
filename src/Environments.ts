@@ -6,45 +6,45 @@
 import { RelayHubConfiguration } from './types/RelayHubConfiguration';
 
 export interface Environment {
-  readonly chainId: number
-  readonly mintxgascost: number
-  readonly relayHubConfiguration: RelayHubConfiguration
+    readonly chainId: number;
+    readonly mintxgascost: number;
+    readonly relayHubConfiguration: RelayHubConfiguration;
 }
 
 const defaultRelayHubConfiguration: RelayHubConfiguration = {
-  maxWorkerCount: 10,
-  minimumStake: 1e18.toString(),
-  minimumUnstakeDelay: 1000,
-  minimumEntryDepositValue: 1e18.toString()
+    maxWorkerCount: 10,
+    minimumStake: (1e18).toString(),
+    minimumUnstakeDelay: 1000,
+    minimumEntryDepositValue: (1e18).toString()
 };
 
 export const environments: { [key: string]: Environment } = {
-  istanbul: {
-    chainId: 1,
-    relayHubConfiguration: defaultRelayHubConfiguration,
-    mintxgascost: 21000
-  },
-  constantinople: {
-    chainId: 1,
-    relayHubConfiguration: defaultRelayHubConfiguration,
-    mintxgascost: 21000
-  },
-  rsk: {
-    chainId: 33,
-    relayHubConfiguration: defaultRelayHubConfiguration,
-    mintxgascost: 21000
-  }
+    istanbul: {
+        chainId: 1,
+        relayHubConfiguration: defaultRelayHubConfiguration,
+        mintxgascost: 21000
+    },
+    constantinople: {
+        chainId: 1,
+        relayHubConfiguration: defaultRelayHubConfiguration,
+        mintxgascost: 21000
+    },
+    rsk: {
+        chainId: 33,
+        relayHubConfiguration: defaultRelayHubConfiguration,
+        mintxgascost: 21000
+    }
 };
 
 export const defaultEnvironment = environments.rsk;
 
-export function getEnvironment (networkName: string): Environment {
-  if (networkName.startsWith('rsk')) {
-    return environments.rsk;
-  }
-  return defaultEnvironment;
+export function getEnvironment(networkName: string): Environment {
+    if (networkName.startsWith('rsk')) {
+        return environments.rsk;
+    }
+    return defaultEnvironment;
 }
 
-export function isRsk (environment: Environment): boolean {
-  return environment.chainId === 33;
+export function isRsk(environment: Environment): boolean {
+    return environment.chainId === 33;
 }

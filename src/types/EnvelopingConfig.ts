@@ -5,23 +5,23 @@ import { LogLevelNumbers } from 'loglevel';
  * @field jsonStringifyRequest - should be 'true' for Metamask, false for ganache
  */
 export interface EnvelopingConfig {
-    preferredRelays: string[]
-    onlyPreferredRelays: boolean
-    relayLookupWindowBlocks: number
-    relayLookupWindowParts: number
-    methodSuffix: string
-    jsonStringifyRequest: boolean
-    relayTimeoutGrace: number
-    sliceSize: number
-    logLevel: LogLevelNumbers
-    gasPriceFactorPercent: number
-    minGasPrice: number
-    maxRelayNonceGap: number
-    relayHubAddress: string
-    deployVerifierAddress: string
-    relayVerifierAddress: string
-    forwarderAddress: string
-    smartWalletFactoryAddress: string
-    chainId: number
-    clientId: string
+    preferredRelays: string[];
+    onlyPreferredRelays: boolean;
+    relayLookupWindowBlocks: number;
+    relayLookupWindowParts: number;
+    methodSuffix: string;
+    jsonStringifyRequest: boolean;
+    relayTimeoutGrace: number;
+    sliceSize: number;
+    logLevel: LogLevelNumbers;
+    gasPriceFactorPercent: number;
+    minGasPrice: number;
+    maxRelayNonceGap: number;
+    relayHubAddress: string;
+    deployVerifierAddress: string;
+    relayVerifierAddress: string;
+    forwarderAddress: string;
+    smartWalletFactoryAddress: string;
+    chainId: number;
+    clientId: string;
 }
