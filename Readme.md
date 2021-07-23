@@ -14,7 +14,7 @@ ways to installing this dependency:
 
 * **Use a release version:** just install this using the install command for node `npm i --save @rsksmart/rif-relay-common`.
 * **Use the distributable directly from the repository:** modify your `package.json` file
-to add this line `"@rsksmart/rif-relay-common": "https://github.com/JONAF2103/rif-relay-common",`
+to add this line `"@rsksmart/rif-relay-common": "https://github.com/infuy/rif-relay-common",`
 * **Use the development version directly from your changes:** clone this repository next to your project and modify your `package.json` file
   to add this line `"@rsksmart/rif-relay-common": "../rif-relay-common",`
 
