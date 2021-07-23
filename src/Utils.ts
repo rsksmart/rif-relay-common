@@ -5,7 +5,6 @@ import { EventData } from 'web3-eth-contract';
 import { JsonRpcResponse } from 'web3-core-helpers';
 import { PrefixedHexString } from 'ethereumjs-tx';
 import { arrayify } from '@ethersproject/bytes';
-import { ServerConfigParams } from './types/ServerConfigParams';
 import { IRelayHub } from '@rsksmart/rif-relay-contracts';
 import chalk from 'chalk';
 import { constants } from './Constants';
@@ -225,7 +224,7 @@ export function getLatestEventData(events: EventData[]): EventData | undefined {
 
 export function isRegistrationValid(
     registerEvent: EventData | undefined,
-    config: ServerConfigParams,
+    config: any,
     managerAddress: string
 ): boolean {
     const portIncluded: boolean = config.url.indexOf(':') > 0;

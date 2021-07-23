@@ -3,7 +3,6 @@
 import { EIP712TypedData } from 'eth-sig-util';
 import { EventData } from 'web3-eth-contract';
 import { PrefixedHexString } from 'ethereumjs-tx';
-import { ServerConfigParams } from './types/ServerConfigParams';
 import { DeployTransactionRequest, RelayTransactionRequest } from './types/RelayTransactionRequest';
 export declare function removeHexPrefix(hex: string): string;
 export declare function padTo64(hex: string): string;
@@ -30,7 +29,7 @@ export declare function sleep(ms: number): Promise<void>;
 export declare function randomInRange(min: number, max: number): number;
 export declare function isSecondEventLater(a: EventData, b: EventData): boolean;
 export declare function getLatestEventData(events: EventData[]): EventData | undefined;
-export declare function isRegistrationValid(registerEvent: EventData | undefined, config: ServerConfigParams, managerAddress: string): boolean;
+export declare function isRegistrationValid(registerEvent: EventData | undefined, config: any, managerAddress: string): boolean;
 export interface VerifierGasLimits {
     preRelayedCallGasLimit: string;
     postRelayedCallGasLimit: string;
