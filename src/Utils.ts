@@ -12,6 +12,7 @@ import {
     DeployTransactionRequest,
     RelayTransactionRequest
 } from './types/RelayTransactionRequest';
+import { RelayData } from './types/RelayData';
 import { DeployRequest, RelayRequest } from './EIP712/RelayRequest';
 import TruffleContract = require('@truffle/contract');
 
@@ -223,18 +224,15 @@ export function getLatestEventData(events: EventData[]): EventData | undefined {
 }
 
 export function isRegistrationValid(
-    registerEvent: EventData | undefined,
+    relayData: RelayData | undefined,
     config: any,
     managerAddress: string
 ): boolean {
     const portIncluded: boolean = config.url.indexOf(':') > 0;
     return (
-        registerEvent != null &&
-        isSameAddress(
-            registerEvent.returnValues.relayManager,
-            managerAddress
-        ) &&
-        registerEvent.returnValues.relayUrl.toString() ===
+        relayData !== undefined &&
+        isSameAddress(relayData.manager, managerAddress) &&
+        relayData.url.toString() ===
             config.url.toString() +
                 (!portIncluded && config.port > 0
                     ? ':' + config.port.toString()
