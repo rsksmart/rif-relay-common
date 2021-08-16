@@ -1,4 +1,4 @@
-import RelayData from './EIP712/RelayData';
+import * as EIP712RelayData from './EIP712/RelayData';
 import TypedRequestData from './EIP712/TypedRequestData';
 import EnvelopingTransactionDetails from './types/EnvelopingTransactionDetails';
 import ContractInteractor from './ContractInteractor';
@@ -28,7 +28,7 @@ export * from './Utils';
 export * from './VersionRegistry';
 
 export {
-    RelayData,
+    EIP712RelayData,
     TypedRequestData,
     EnvelopingTransactionDetails,
     ContractInteractor,
