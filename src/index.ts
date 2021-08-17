@@ -1,4 +1,4 @@
-import * as EIP712RelayData from './EIP712/RelayData';
+import EIP712RelayData from './EIP712/RelayData';
 import TypedRequestData from './EIP712/TypedRequestData';
 import EnvelopingTransactionDetails from './types/EnvelopingTransactionDetails';
 import ContractInteractor from './ContractInteractor';
