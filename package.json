@@ -12,7 +12,6 @@
     "prepublishOnly": "scripts/prepublishOnly",
     "postpublish": "scripts/postpublish",
     "publishManually": "scripts/publishManually",
-    "switchPostInstall": "scripts/switchPostInstall",
     "prettier:fix": "npx prettier --write --ignore-unknown .",
     "prettier": "npx prettier --check ."
   },
@@ -56,7 +55,6 @@
     "@types/eth-sig-util": "2.1.0",
     "eslint": "^7.30.0",
     "husky": "^6.0.0",
-    "pinst": "^2.1.6",
     "prettier": "2.3.0",
     "ts-loader": "^9.2.3",
     "ts-node": "8.6.2",
