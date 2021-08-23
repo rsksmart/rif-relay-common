@@ -20,7 +20,7 @@ ways to installing this dependency:
 * **Use the distributable directly from the repository:** modify your `package.json` file
 to add this line `"@rsksmart/rif-relay-common": "https://github.com/infuy/rif-relay-common",`
 * **Use the development version directly from your changes:** clone this repository next to your project and modify your `package.json` file
-  to add this line `"@rsksmart/rif-relay-common": "../rif--relay-common",`
+  to add this line `"@rsksmart/rif-relay-common": "../rif-relay-common",`
 
 #### How to generate a new distributable version
 
