@@ -29,7 +29,7 @@ This project works as a dependency and needs to be installed in order to be used
 
 ### Dependencies
 
-To start working with this project you need to first enable `postinstall` scripts (refer to section [Enable postinstall scripts](#enable-postinstall-scripts)).
+To start working with this project you need to first enable `postinstall` scripts (refer to section [Enabling postinstall scripts](#enabling-postinstall-scripts)).
 
 Then just run `npm install` to install all dependencies.
 
