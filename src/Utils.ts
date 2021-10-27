@@ -12,7 +12,7 @@ import {
     DeployTransactionRequest,
     RelayTransactionRequest
 } from './types/RelayTransactionRequest';
-import { RelayData } from './types/RelayData';
+import { RelayManagerData } from './types/RelayManagerData';
 import { DeployRequest, RelayRequest } from './EIP712/RelayRequest';
 import TruffleContract = require('@truffle/contract');
 
@@ -224,7 +224,7 @@ export function getLatestEventData(events: EventData[]): EventData | undefined {
 }
 
 export function isRegistrationValid(
-    relayData: RelayData | undefined,
+    relayData: RelayManagerData | undefined,
     config: any,
     managerAddress: string
 ): boolean {
