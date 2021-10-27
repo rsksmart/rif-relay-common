@@ -36,7 +36,7 @@ import { constants } from './Constants';
 import replaceErrors from './ErrorReplacerJSON';
 import VersionsManager from './VersionsManager';
 import { EnvelopingConfig } from './types/EnvelopingConfig';
-import { RelayInfo } from './types/RelayInfo';
+import { RelayData } from './types/RelayData';
 import EnvelopingTransactionDetails from './types/EnvelopingTransactionDetails';
 import { toBN, toHex } from 'web3-utils';
 import BN from 'bn.js';
@@ -596,12 +596,12 @@ export default class ContractInteractor {
 
     async getActiveRelays(
         relayManagers: Set<string> | string[]
-    ): Promise<RelayInfo[]> {
+    ): Promise<RelayData[]> {
         const managers: string[] = Array.from(relayManagers);
-        const contractCalls: Array<Promise<RelayInfo>> = [];
+        const contractCalls: Array<Promise<RelayData>> = [];
         managers.forEach((managerAddress) => {
             contractCalls.push(
-                this.relayHubInstance.getRelayInfo(managerAddress)
+                this.relayHubInstance.getRelayData(managerAddress)
             );
         });
         const results = await Promise.all(contractCalls);
@@ -613,14 +613,14 @@ export default class ContractInteractor {
         );
     }
 
-    async getRelayInfo(
+    async getRelayData(
         relayManagers: Set<string> | string[]
-    ): Promise<RelayInfo[]> {
+    ): Promise<RelayData[]> {
         const managers: string[] = Array.from(relayManagers);
-        const contractCalls: Array<Promise<RelayInfo>> = [];
+        const contractCalls: Array<Promise<RelayData>> = [];
         managers.forEach((managerAddress) => {
             contractCalls.push(
-                this.relayHubInstance.getRelayInfo(managerAddress)
+                this.relayHubInstance.getRelayData(managerAddress)
             );
         });
         return await Promise.all(contractCalls);

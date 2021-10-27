@@ -1,4 +1,4 @@
-export interface RelayInfo {
+export interface RelayData {
     manager: string;
     penalized: boolean;
     url: string;
