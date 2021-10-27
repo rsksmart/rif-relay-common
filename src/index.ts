@@ -19,7 +19,7 @@ export * from './types/EnvelopingConfig';
 export * from './types/EnvelopingTransactionDetails';
 export * from './types/RelayHubConfiguration';
 export * from './types/RelayTransactionRequest';
-export * from './types/RelayData';
+export * from './types/RelayInfo';
 export * from './AmountRequired';
 export * from './Constants';
 export * from './ContractInteractor';

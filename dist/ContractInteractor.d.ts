@@ -6,7 +6,7 @@ import { BlockNumber, HttpProvider, IpcProvider, provider, Transaction, Transact
 import { DeployRequest, RelayRequest } from './EIP712/RelayRequest';
 import { IForwarderInstance, IRelayVerifierInstance, IRelayHubInstance, IDeployVerifierInstance, IWalletFactoryInstance, ITokenHandlerInstance } from '@rsksmart/rif-relay-contracts/types/truffle-contracts';
 import { EnvelopingConfig } from './types/EnvelopingConfig';
-import { RelayData } from './types/RelayData';
+import { RelayInfo } from './types/RelayInfo';
 import EnvelopingTransactionDetails from './types/EnvelopingTransactionDetails';
 import BN from 'bn.js';
 import { DeployTransactionRequest, RelayTransactionRequest } from './types/RelayTransactionRequest';
@@ -81,8 +81,8 @@ export default class ContractInteractor {
     getMaxViewableRelayGasLimit(relayRequest: RelayRequest, signature: PrefixedHexString): Promise<number>;
     encodeRelayCallABI(relayRequest: RelayRequest, sig: PrefixedHexString): PrefixedHexString;
     encodeDeployCallABI(relayRequest: DeployRequest, sig: PrefixedHexString): PrefixedHexString;
-    getActiveRelays(relayManagers: Set<string> | string[]): Promise<RelayData[]>;
-    getRelayData(relayManagers: Set<string> | string[]): Promise<RelayData[]>;
+    getActiveRelays(relayManagers: Set<string> | string[]): Promise<RelayInfo[]>;
+    getRelayInfo(relayManagers: Set<string> | string[]): Promise<RelayInfo[]>;
     getPastEventsForHub(extraTopics: string[], options: PastEventOptions, names?: EventName[]): Promise<EventData[]>;
     getPastEventsForStakeManagement(names: EventName[], extraTopics: string[], options: PastEventOptions): Promise<EventData[]>;
     _getPastEvents(contract: any, names: EventName[], extraTopics: string[], options: PastEventOptions): Promise<EventData[]>;
