@@ -1,14 +1,14 @@
-import EIP712RelayData from './RelayData';
+import RelayData from './RelayData';
 import { ForwardRequest, DeployRequestStruct } from './ForwardRequest';
 
 export interface RelayRequest {
     request: ForwardRequest;
-    relayData: EIP712RelayData;
+    relayData: RelayData;
 }
 
 export interface DeployRequest {
     request: DeployRequestStruct;
-    relayData: EIP712RelayData;
+    relayData: RelayData;
 }
 
 export function cloneRelayRequest(relayRequest: RelayRequest): RelayRequest {
