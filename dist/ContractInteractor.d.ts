@@ -81,7 +81,7 @@ export default class ContractInteractor {
     getMaxViewableRelayGasLimit(relayRequest: RelayRequest, signature: PrefixedHexString): Promise<number>;
     encodeRelayCallABI(relayRequest: RelayRequest, sig: PrefixedHexString): PrefixedHexString;
     encodeDeployCallABI(relayRequest: DeployRequest, sig: PrefixedHexString): PrefixedHexString;
-    getActiveRelays(relayManagers: Set<string> | string[]): Promise<RelayManagerData[]>;
+    getActiveRelayInfo(relayManagers: Set<string> | string[]): Promise<RelayManagerData[]>;
     getRelayInfo(relayManagers: Set<string> | string[]): Promise<RelayManagerData[]>;
     getPastEventsForHub(extraTopics: string[], options: PastEventOptions, names?: EventName[]): Promise<EventData[]>;
     getPastEventsForStakeManagement(names: EventName[], extraTopics: string[], options: PastEventOptions): Promise<EventData[]>;

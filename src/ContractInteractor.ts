@@ -594,7 +594,7 @@ export default class ContractInteractor {
             .encodeABI();
     }
 
-    async getActiveRelays(
+    async getActiveRelayInfo(
         relayManagers: Set<string> | string[]
     ): Promise<RelayManagerData[]> {
         const results = await this.getRelayInfo(relayManagers)
