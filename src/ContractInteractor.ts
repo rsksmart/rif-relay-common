@@ -599,7 +599,7 @@ export default class ContractInteractor {
     ): Promise<RelayManagerData[]> {
         const results = await this.getRelayInfo(relayManagers)
         return results.filter(
-            (relayData) => relayData.registered
+            (relayData) => relayData.registered && relayData.currentlyStaked
         );
     }
 
