@@ -21,7 +21,8 @@ import {
     IRelayHub,
     IForwarder,
     IWalletFactory,
-    ITokenHandler
+    ITokenHandler,
+    RelayManagerData
 } from '@rsksmart/rif-relay-contracts';
 import {
     IForwarderInstance,
@@ -36,7 +37,6 @@ import { constants } from './Constants';
 import replaceErrors from './ErrorReplacerJSON';
 import VersionsManager from './VersionsManager';
 import { EnvelopingConfig } from './types/EnvelopingConfig';
-import { RelayManagerData } from './types/RelayManagerData';
 import EnvelopingTransactionDetails from './types/EnvelopingTransactionDetails';
 import { toBN, toHex } from 'web3-utils';
 import BN from 'bn.js';

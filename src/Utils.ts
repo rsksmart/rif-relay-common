@@ -5,14 +5,13 @@ import { EventData } from 'web3-eth-contract';
 import { JsonRpcResponse } from 'web3-core-helpers';
 import { PrefixedHexString } from 'ethereumjs-tx';
 import { arrayify } from '@ethersproject/bytes';
-import { IRelayHub } from '@rsksmart/rif-relay-contracts';
+import { IRelayHub, RelayManagerData } from '@rsksmart/rif-relay-contracts';
 import chalk from 'chalk';
 import { constants } from './Constants';
 import {
     DeployTransactionRequest,
     RelayTransactionRequest
 } from './types/RelayTransactionRequest';
-import { RelayManagerData } from './types/RelayManagerData';
 import { DeployRequest, RelayRequest } from './EIP712/RelayRequest';
 import TruffleContract = require('@truffle/contract');
 

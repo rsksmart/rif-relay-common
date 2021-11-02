@@ -3,8 +3,8 @@
 import { EIP712TypedData } from 'eth-sig-util';
 import { EventData } from 'web3-eth-contract';
 import { PrefixedHexString } from 'ethereumjs-tx';
+import { RelayManagerData } from '@rsksmart/rif-relay-contracts';
 import { DeployTransactionRequest, RelayTransactionRequest } from './types/RelayTransactionRequest';
-import { RelayManagerData } from './types/RelayManagerData';
 export declare function removeHexPrefix(hex: string): string;
 export declare function padTo64(hex: string): string;
 export declare function event2topic(contract: any, names: string[]): any;
