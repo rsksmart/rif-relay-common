@@ -595,7 +595,7 @@ export default class ContractInteractor {
     }
 
     async getActiveRelayInfo(
-        relayManagers: Set<string> | string[]
+        relayManagers: Set<string>
     ): Promise<RelayManagerData[]> {
         const results = await this.getRelayInfo(relayManagers)
         return results.filter(
@@ -604,7 +604,7 @@ export default class ContractInteractor {
     }
 
     async getRelayInfo(
-        relayManagers: Set<string> | string[]
+        relayManagers: Set<string>
     ): Promise<RelayManagerData[]> {
         const managers: string[] = Array.from(relayManagers);
         const contractCalls: Array<Promise<RelayManagerData>> = [];
