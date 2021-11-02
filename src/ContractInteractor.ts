@@ -607,12 +607,9 @@ export default class ContractInteractor {
         relayManagers: Set<string>
     ): Promise<RelayManagerData[]> {
         const managers: string[] = Array.from(relayManagers);
-        const contractCalls: Array<Promise<RelayManagerData>> = [];
-        managers.forEach((managerAddress) => {
-            contractCalls.push(
-                this.relayHubInstance.getRelayInfo(managerAddress)
-            );
-        });
+        const contractCalls: Array<Promise<RelayManagerData>> = managers.map(
+            (managerAddress) => this.relayHubInstance.getRelayInfo(managerAddress)
+        );
         return await Promise.all(contractCalls);
     }
 
