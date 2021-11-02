@@ -20,7 +20,7 @@
   "dependencies": {
     "@openeth/truffle-typings": "0.0.6",
     "@openzeppelin/contracts": "~3.2.0",
-    "@rsksmart/rif-relay-contracts": "https://github.com/anarancio/rif-relay-contracts#feature/PP-43/refactor-register-relay",
+    "@rsksmart/rif-relay-contracts": "https://github.com/anarancio/rif-relay-contracts#feature/PP-43/refactor-register-relay-iter",
     "@truffle/contract": "~4.2.23",
     "@truffle/contract-schema": "3.3.2",
     "@truffle/hdwallet-provider": "1.2.4",
