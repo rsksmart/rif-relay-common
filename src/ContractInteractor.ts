@@ -21,7 +21,8 @@ import {
     IRelayHub,
     IForwarder,
     IWalletFactory,
-    ITokenHandler
+    ITokenHandler,
+    RelayManagerData
 } from '@rsksmart/rif-relay-contracts';
 import {
     IForwarderInstance,
@@ -36,7 +37,6 @@ import { constants } from './Constants';
 import replaceErrors from './ErrorReplacerJSON';
 import VersionsManager from './VersionsManager';
 import { EnvelopingConfig } from './types/EnvelopingConfig';
-import { RelayData } from './types/RelayData';
 import EnvelopingTransactionDetails from './types/EnvelopingTransactionDetails';
 import { toBN, toHex } from 'web3-utils';
 import BN from 'bn.js';
@@ -594,35 +594,22 @@ export default class ContractInteractor {
             .encodeABI();
     }
 
-    async getActiveRelays(
-        relayManagers: Set<string> | string[]
-    ): Promise<RelayData[]> {
-        const managers: string[] = Array.from(relayManagers);
-        const contractCalls: Array<Promise<RelayData>> = [];
-        managers.forEach((managerAddress) => {
-            contractCalls.push(
-                this.relayHubInstance.getRelayData(managerAddress)
-            );
-        });
-        const results = await Promise.all(contractCalls);
+    async getActiveRelayInfo(
+        relayManagers: Set<string>
+    ): Promise<RelayManagerData[]> {
+        const results = await this.getRelayInfo(relayManagers)
         return results.filter(
-            (relayData) =>
-                !relayData.penalized &&
-                relayData.stakeAdded &&
-                relayData.registered
+            (relayData) => relayData.registered && relayData.currentlyStaked
         );
     }
 
-    async getRelayData(
-        relayManagers: Set<string> | string[]
-    ): Promise<RelayData[]> {
+    async getRelayInfo(
+        relayManagers: Set<string>
+    ): Promise<RelayManagerData[]> {
         const managers: string[] = Array.from(relayManagers);
-        const contractCalls: Array<Promise<RelayData>> = [];
-        managers.forEach((managerAddress) => {
-            contractCalls.push(
-                this.relayHubInstance.getRelayData(managerAddress)
-            );
-        });
+        const contractCalls: Array<Promise<RelayManagerData>> = managers.map(
+            (managerAddress) => this.relayHubInstance.getRelayInfo(managerAddress)
+        );
         return await Promise.all(contractCalls);
     }
 
