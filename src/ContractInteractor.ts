@@ -597,7 +597,7 @@ export default class ContractInteractor {
     async getActiveRelayInfo(
         relayManagers: Set<string>
     ): Promise<RelayManagerData[]> {
-        const results = await this.getRelayInfo(relayManagers)
+        const results = await this.getRelayInfo(relayManagers);
         return results.filter(
             (relayData) => relayData.registered && relayData.currentlyStaked
         );
@@ -608,7 +608,8 @@ export default class ContractInteractor {
     ): Promise<RelayManagerData[]> {
         const managers: string[] = Array.from(relayManagers);
         const contractCalls: Array<Promise<RelayManagerData>> = managers.map(
-            (managerAddress) => this.relayHubInstance.getRelayInfo(managerAddress)
+            (managerAddress) =>
+                this.relayHubInstance.getRelayInfo(managerAddress)
         );
         return await Promise.all(contractCalls);
     }
