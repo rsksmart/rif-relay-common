@@ -21,7 +21,8 @@ import {
     IRelayHub,
     IForwarder,
     IWalletFactory,
-    ITokenHandler
+    ITokenHandler,
+    RelayManagerData
 } from '@rsksmart/rif-relay-contracts';
 import {
     IForwarderInstance,
@@ -591,6 +592,26 @@ export default class ContractInteractor {
         return relayHub.contract.methods
             .deployCall(relayRequest, sig)
             .encodeABI();
+    }
+
+    async getActiveRelayInfo(
+        relayManagers: Set<string>
+    ): Promise<RelayManagerData[]> {
+        const results = await this.getRelayInfo(relayManagers);
+        return results.filter(
+            (relayData) => relayData.registered && relayData.currentlyStaked
+        );
+    }
+
+    async getRelayInfo(
+        relayManagers: Set<string>
+    ): Promise<RelayManagerData[]> {
+        const managers: string[] = Array.from(relayManagers);
+        const contractCalls: Array<Promise<RelayManagerData>> = managers.map(
+            (managerAddress) =>
+                this.relayHubInstance.getRelayInfo(managerAddress)
+        );
+        return await Promise.all(contractCalls);
     }
 
     async getPastEventsForHub(

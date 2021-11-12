@@ -5,7 +5,7 @@ import { EventData } from 'web3-eth-contract';
 import { JsonRpcResponse } from 'web3-core-helpers';
 import { PrefixedHexString } from 'ethereumjs-tx';
 import { arrayify } from '@ethersproject/bytes';
-import { IRelayHub } from '@rsksmart/rif-relay-contracts';
+import { IRelayHub, RelayManagerData } from '@rsksmart/rif-relay-contracts';
 import chalk from 'chalk';
 import { constants } from './Constants';
 import {
@@ -223,18 +223,15 @@ export function getLatestEventData(events: EventData[]): EventData | undefined {
 }
 
 export function isRegistrationValid(
-    registerEvent: EventData | undefined,
+    relayData: RelayManagerData | undefined,
     config: any,
     managerAddress: string
 ): boolean {
     const portIncluded: boolean = config.url.indexOf(':') > 0;
     return (
-        registerEvent != null &&
-        isSameAddress(
-            registerEvent.returnValues.relayManager,
-            managerAddress
-        ) &&
-        registerEvent.returnValues.relayUrl.toString() ===
+        relayData !== undefined &&
+        isSameAddress(relayData.manager, managerAddress) &&
+        relayData.url.toString() ===
             config.url.toString() +
                 (!portIncluded && config.port > 0
                     ? ':' + config.port.toString()

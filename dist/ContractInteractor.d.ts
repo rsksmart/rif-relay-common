@@ -4,6 +4,7 @@ import { EventData, PastEventOptions } from 'web3-eth-contract';
 import { PrefixedHexString, TransactionOptions } from 'ethereumjs-tx';
 import { BlockNumber, HttpProvider, IpcProvider, provider, Transaction, TransactionReceipt, WebsocketProvider } from 'web3-core';
 import { DeployRequest, RelayRequest } from './EIP712/RelayRequest';
+import { RelayManagerData } from '@rsksmart/rif-relay-contracts';
 import { IForwarderInstance, IRelayVerifierInstance, IRelayHubInstance, IDeployVerifierInstance, IWalletFactoryInstance, ITokenHandlerInstance } from '@rsksmart/rif-relay-contracts/types/truffle-contracts';
 import { EnvelopingConfig } from './types/EnvelopingConfig';
 import EnvelopingTransactionDetails from './types/EnvelopingTransactionDetails';
@@ -80,6 +81,8 @@ export default class ContractInteractor {
     getMaxViewableRelayGasLimit(relayRequest: RelayRequest, signature: PrefixedHexString): Promise<number>;
     encodeRelayCallABI(relayRequest: RelayRequest, sig: PrefixedHexString): PrefixedHexString;
     encodeDeployCallABI(relayRequest: DeployRequest, sig: PrefixedHexString): PrefixedHexString;
+    getActiveRelayInfo(relayManagers: Set<string>): Promise<RelayManagerData[]>;
+    getRelayInfo(relayManagers: Set<string>): Promise<RelayManagerData[]>;
     getPastEventsForHub(extraTopics: string[], options: PastEventOptions, names?: EventName[]): Promise<EventData[]>;
     getPastEventsForStakeManagement(names: EventName[], extraTopics: string[], options: PastEventOptions): Promise<EventData[]>;
     _getPastEvents(contract: any, names: EventName[], extraTopics: string[], options: PastEventOptions): Promise<EventData[]>;
