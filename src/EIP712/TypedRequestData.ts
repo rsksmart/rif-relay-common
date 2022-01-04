@@ -35,6 +35,7 @@ export const ForwardRequestType = [
     { name: 'from', type: 'address' },
     { name: 'to', type: 'address' },
     { name: 'tokenContract', type: 'address' },
+    { name: 'collectorContract', type: 'address' },
     { name: 'value', type: 'uint256' },
     { name: 'gas', type: 'uint256' },
     { name: 'nonce', type: 'uint256' },

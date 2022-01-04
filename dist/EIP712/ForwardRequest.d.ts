@@ -4,6 +4,7 @@ export interface ForwardRequest {
     from: string;
     to: string;
     tokenContract: string;
+    collectorContract: string;
     value: string;
     gas: string;
     nonce: string;
