@@ -58,6 +58,7 @@ export const RelayTransactionRequestShape = {
             nonce: ow.string,
             data: ow.string,
             tokenContract: ow.string,
+            collectorContract: ow.string,
             tokenAmount: ow.string,
             tokenGas: ow.string
         },

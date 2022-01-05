@@ -53,6 +53,7 @@ export declare const RelayTransactionRequestShape: {
             nonce: import("ow").StringPredicate;
             data: import("ow").StringPredicate;
             tokenContract: import("ow").StringPredicate;
+            collectorContract: import("ow").StringPredicate;
             tokenAmount: import("ow").StringPredicate;
             tokenGas: import("ow").StringPredicate;
         };
