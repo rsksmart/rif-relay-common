@@ -170,10 +170,9 @@ export default class ContractInteractor {
                 err.message
             )
         );
-        const chain = await this.web3.eth.net.getNetworkType();
         this.chainId = await this.getAsyncChainId();
         this.networkId = await this.web3.eth.net.getId();
-        this.networkType = await this.web3.eth.net.getNetworkType();
+        await this._setNetworkType();
         log.debug(
             `Contract Interactor - Using chainId: ${this.chainId}, netowrkId:${this.networkId} , networkType:${this.networkType} `
         );
@@ -181,7 +180,7 @@ export default class ContractInteractor {
         this.rawTxOptions = getRawTxOptions(
             this.chainId,
             this.networkId,
-            chain
+            this.networkType
         );
     }
 
@@ -191,6 +190,14 @@ export default class ContractInteractor {
 
     async getAsyncChainId(): Promise<number> {
         return await this.web3.eth.getChainId();
+    }
+
+    async _setNetworkType(): Promise<void> {
+        try {
+            this.networkType = await this.web3.eth.net.getNetworkType();
+        } catch (e) {
+            this.networkType = 'private';
+        }
     }
 
     async _validateCompatibility(): Promise<void> {
