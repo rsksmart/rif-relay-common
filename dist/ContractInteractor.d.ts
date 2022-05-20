@@ -49,8 +49,6 @@ export default class ContractInteractor {
     getProvider(): provider;
     init(): Promise<void>;
     isInitialized(): boolean;
-    _setChaindId(): Promise<void>;
-    _setNetworkId(): Promise<void>;
     _setNetworkType(): Promise<void>;
     _validateCompatibility(): Promise<void>;
     _validateVersion(version: string): void;

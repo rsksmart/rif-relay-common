@@ -166,8 +166,9 @@ export default class ContractInteractor {
         await this._validateCompatibility().catch((err) =>
             log.warn('WARNING: beta ignore version compatibility', err.message)
         );
-        await this._setChaindId();
-        await this._setNetworkId();
+
+        this.chainId = await this.web3.eth.getChainId();
+        this.networkId = await this.web3.eth.net.getId();
         await this._setNetworkType();
         log.debug(
             `Contract Interactor - Using chainId: ${this.chainId}, networkId:${this.networkId} , networkType:${this.networkType} `
@@ -182,24 +183,6 @@ export default class ContractInteractor {
 
     isInitialized(): boolean {
         return this.rawTxOptions != null;
-    }
-
-    async _setChaindId(): Promise<void> {
-        try {
-            this.chainId = await this.web3.eth.getChainId();
-        } catch (e) {
-            log.debug(e);
-            throw new Error('Could not retreive the chainId');
-        }
-    }
-
-    async _setNetworkId(): Promise<void> {
-        try {
-            this.networkId = await this.web3.eth.net.getId();
-        } catch (e) {
-            log.debug(e);
-            throw new Error('Could not retreive the networkId');
-        }
     }
 
     async _setNetworkType(): Promise<void> {

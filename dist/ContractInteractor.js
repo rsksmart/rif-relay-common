@@ -89,8 +89,8 @@ class ContractInteractor {
         await this._initializeContracts();
         loglevel_1.default.debug('Contract Interactor - Initialized succesfully');
         await this._validateCompatibility().catch((err) => loglevel_1.default.warn('WARNING: beta ignore version compatibility', err.message));
-        await this._setChaindId();
-        await this._setNetworkId();
+        this.chainId = await this.web3.eth.getChainId();
+        this.networkId = await this.web3.eth.net.getId();
         await this._setNetworkType();
         loglevel_1.default.debug(`Contract Interactor - Using chainId: ${this.chainId}, networkId:${this.networkId} , networkType:${this.networkType} `);
         // chain === 'private' means we're on ganache, and ethereumjs-tx.Transaction doesn't support that chain type
@@ -98,24 +98,6 @@ class ContractInteractor {
     }
     isInitialized() {
         return this.rawTxOptions != null;
-    }
-    async _setChaindId() {
-        try {
-            this.chainId = await this.web3.eth.getChainId();
-        }
-        catch (e) {
-            loglevel_1.default.debug(e);
-            throw new Error('Could not retreive the chainId');
-        }
-    }
-    async _setNetworkId() {
-        try {
-            this.networkId = await this.web3.eth.net.getId();
-        }
-        catch (e) {
-            loglevel_1.default.debug(e);
-            throw new Error('Could not retreive the networkId');
-        }
     }
     async _setNetworkType() {
         try {
