@@ -190,7 +190,7 @@ export default class ContractInteractor {
             this.networkType = await this.web3.eth.net.getNetworkType();
         } catch (e) {
             log.warn(
-                'WARNING: Could not retreive the network type, used default value private'
+                'WARNING: Could not retrieve the network type, used default value private'
             );
             this.networkType = 'private';
         }
