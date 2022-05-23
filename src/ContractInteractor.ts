@@ -13,7 +13,6 @@ import {
     TransactionReceipt,
     WebsocketProvider
 } from 'web3-core';
-
 import { DeployRequest, RelayRequest } from './EIP712/RelayRequest';
 import {
     IRelayVerifier,
@@ -165,23 +164,20 @@ export default class ContractInteractor {
         await this._initializeContracts();
         log.debug('Contract Interactor - Initialized succesfully');
         await this._validateCompatibility().catch((err) =>
-            console.log(
-                'WARNING: beta ignore version compatibility',
-                err.message
-            )
+            log.warn('WARNING: beta ignore version compatibility', err.message)
         );
-        const chain = await this.web3.eth.net.getNetworkType();
-        this.chainId = await this.getAsyncChainId();
+
+        this.chainId = await this.web3.eth.getChainId();
         this.networkId = await this.web3.eth.net.getId();
-        this.networkType = await this.web3.eth.net.getNetworkType();
+        await this._setNetworkType();
         log.debug(
-            `Contract Interactor - Using chainId: ${this.chainId}, netowrkId:${this.networkId} , networkType:${this.networkType} `
+            `Contract Interactor - Using chainId: ${this.chainId}, networkId:${this.networkId} , networkType:${this.networkType} `
         );
         // chain === 'private' means we're on ganache, and ethereumjs-tx.Transaction doesn't support that chain type
         this.rawTxOptions = getRawTxOptions(
             this.chainId,
             this.networkId,
-            chain
+            this.networkType
         );
     }
 
@@ -189,8 +185,15 @@ export default class ContractInteractor {
         return this.rawTxOptions != null;
     }
 
-    async getAsyncChainId(): Promise<number> {
-        return await this.web3.eth.getChainId();
+    async _setNetworkType(): Promise<void> {
+        try {
+            this.networkType = await this.web3.eth.net.getNetworkType();
+        } catch (e) {
+            log.warn(
+                'WARNING: Could not retrieve the network type, used default value private'
+            );
+            this.networkType = 'private';
+        }
     }
 
     async _validateCompatibility(): Promise<void> {
@@ -236,8 +239,7 @@ export default class ContractInteractor {
                 `Contract Interactor - Deploy Verifier initialized: ${this.deployVerifierInstance.address}`
             );
         }
-
-        console.log('Contracts initialized correctly');
+        log.info('Contracts initialized correctly');
     }
 
     // must use these options when creating Transaction object
@@ -740,7 +742,7 @@ export default class ContractInteractor {
     }
 
     async isContractDeployed(address: string): Promise<boolean> {
-        const code = await this.web3.eth.getCode(address);
+        const code = await this.getCode(address);
         // Check added for RSKJ: when the contract does not exist in RSKJ it replies to the getCode call with 0x00
         return code !== '0x' && code !== '0x00';
     }
