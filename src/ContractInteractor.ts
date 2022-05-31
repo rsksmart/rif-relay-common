@@ -196,6 +196,10 @@ export default class ContractInteractor {
         }
     }
 
+    async getAsyncChainId(): Promise<number> {
+        return await this.web3.eth.getChainId();
+    }
+
     async _validateCompatibility(): Promise<void> {
         if (this.config.relayHubAddress === constants.ZERO_ADDRESS) {
             return;

@@ -50,6 +50,7 @@ export default class ContractInteractor {
     init(): Promise<void>;
     isInitialized(): boolean;
     _setNetworkType(): Promise<void>;
+    getAsyncChainId(): Promise<number>;
     _validateCompatibility(): Promise<void>;
     _validateVersion(version: string): void;
     _initializeContracts(): Promise<void>;
