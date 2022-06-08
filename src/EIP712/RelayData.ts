@@ -1,8 +1,8 @@
-import { PrefixedHexString } from 'ethereumjs-tx';
+// import { PrefixedHexString } from 'ethereumjs-tx';
 
 export default interface RelayData {
     gasPrice: string;
-    domainSeparator: PrefixedHexString;
+    // domainSeparator: PrefixedHexString;
     relayWorker: string;
     callForwarder: string;
     callVerifier: string;
