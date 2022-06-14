@@ -763,7 +763,7 @@ export default class ContractInteractor {
     async walletFactoryDeployEstimateGasForInternalCall(
         request: DeployRequest,
         factory: string,
-        domainHash: string,
+        // domainHash: string,
         suffixData: string,
         signature: string,
         testCall = false
@@ -772,7 +772,7 @@ export default class ContractInteractor {
 
         const method = pFactory.contract.methods.relayedUserSmartWalletCreation(
             request.request,
-            domainHash,
+            // domainHash,
             suffixData,
             signature
         );
