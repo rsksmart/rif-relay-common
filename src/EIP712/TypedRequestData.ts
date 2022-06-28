@@ -24,7 +24,6 @@ export const EIP712DomainType = [
 
 const RelayDataType = [
     { name: 'gasPrice', type: 'uint256' },
-    { name: 'domainSeparator', type: 'bytes32' },
     { name: 'relayWorker', type: 'address' },
     { name: 'callForwarder', type: 'address' },
     { name: 'callVerifier', type: 'address' }
@@ -163,5 +162,5 @@ export const DEPLOY_PARAMS =
 export const RequestType = {
     typeName: 'RelayRequest',
     typeSuffix:
-        'RelayData relayData)RelayData(uint256 gasPrice,bytes32 domainSeparator,address relayWorker,address callForwarder,address callVerifier)'
+        'RelayData relayData)RelayData(uint256 gasPrice,address relayWorker,address callForwarder,address callVerifier)'
 };
