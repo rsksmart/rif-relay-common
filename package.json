@@ -1,9 +1,10 @@
 {
   "name": "@rsksmart/rif-relay-common",
-  "version": "0.0.2-alpha.3",
+  "version": "0.0.2-alpha.4",
   "description": "This project contains all the common code for the rif relay system.",
   "main": "dist/index.js",
   "scripts": {
+    "prepack": "npmignore --auto",
     "prepare": "scripts/prepare",
     "build": "scripts/build",
     "lint": "eslint . --ext .ts",
@@ -16,10 +17,19 @@
   },
   "author": "Relaying Services Team",
   "license": "MIT",
+  "publishConfig": {
+    "ignore": [
+      "!dist",
+      "!build",
+      "src",
+      "test",
+      ".github"
+    ]
+  },
   "dependencies": {
     "@openeth/truffle-typings": "0.0.6",
     "@openzeppelin/contracts": "~3.2.0",
-    "@rsksmart/rif-relay-contracts": "0.0.2-alpha.2",
+    "@rsksmart/rif-relay-contracts": "0.0.2-alpha.4",
     "@truffle/abi-utils": "~0.2.3",
     "@truffle/contract": "~4.2.23",
     "@truffle/contract-schema": "3.3.2",
@@ -37,6 +47,7 @@
     "ethereumjs-util": "~6.2.1",
     "ethval": "~2.1.1",
     "loglevel": "~1.7.0",
+    "npmignore": "^0.3.0",
     "ow": "~0.17.0",
     "patch-package": "~6.4.6",
     "semver": "~7.3.2",
