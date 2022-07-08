@@ -13,7 +13,6 @@ import {
     TransactionReceipt,
     WebsocketProvider
 } from 'web3-core';
-import { DeployRequest, RelayRequest } from './EIP712/RelayRequest';
 import {
     IRelayVerifier,
     IDeployVerifier,
@@ -21,7 +20,10 @@ import {
     IForwarder,
     IWalletFactory,
     ITokenHandler,
-    RelayManagerData
+    RelayManagerData,
+    DeployRequest,
+    RelayRequest,
+    constants
 } from '@rsksmart/rif-relay-contracts';
 import {
     IForwarderInstance,
@@ -32,7 +34,6 @@ import {
     ITokenHandlerInstance
 } from '@rsksmart/rif-relay-contracts/types/truffle-contracts';
 import { event2topic, sleep } from './Utils';
-import { constants } from './Constants';
 import replaceErrors from './ErrorReplacerJSON';
 import VersionsManager from './VersionsManager';
 import { EnvelopingConfig } from './types/EnvelopingConfig';
