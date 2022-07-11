@@ -21,11 +21,11 @@
     ],
     "types": [
       "node",
-      "mocha"
+      "mocha",
+      "chai"
     ],
     "lib": [
       "es2018",
-      "dom",
       "esnext"
     ],
     "sourceMap": true
