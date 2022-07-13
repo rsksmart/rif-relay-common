@@ -8,10 +8,10 @@ import { arrayify } from '@ethersproject/bytes';
 import {
     IRelayHub,
     RelayManagerData,
-    constants,
     DeployRequest,
     RelayRequest
 } from '@rsksmart/rif-relay-contracts';
+import { constants } from './Constants';
 import chalk from 'chalk';
 import {
     DeployTransactionRequest,

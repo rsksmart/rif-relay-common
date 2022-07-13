@@ -22,9 +22,9 @@ import {
     ITokenHandler,
     RelayManagerData,
     DeployRequest,
-    RelayRequest,
-    constants
+    RelayRequest
 } from '@rsksmart/rif-relay-contracts';
+import { constants } from './Constants';
 import {
     IForwarderInstance,
     IRelayVerifierInstance,

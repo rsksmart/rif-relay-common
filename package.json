@@ -27,7 +27,7 @@
     ]
   },
   "dependencies": {
-    "@rsksmart/rif-relay-contracts": "/Users/borja/iovlabs/projects/rif-relay-test/rif-relay-contracts",
+    "@rsksmart/rif-relay-contracts": "https://github.com/rsksmart/rif-relay-contracts#feature/PP-45",
     "@truffle/contract": "~4.2.23",
     "bn.js": "5.1.2",
     "chalk": "~4.1.0",
