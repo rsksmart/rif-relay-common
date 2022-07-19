@@ -877,7 +877,7 @@ export default class ContractInteractor {
         );
     }
 
-    async verify(
+    async verifyForwarder(
         suffixData: string,
         request: RelayRequest,
         signature: string
