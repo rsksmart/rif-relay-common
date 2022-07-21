@@ -1,6 +1,7 @@
 import abi from 'web3-eth-abi';
 import { toBN } from 'web3-utils';
-import sigUtil, { EIP712TypedData } from 'eth-sig-util';
+import sigUtil, { EIP712TypedData, TypedDataUtils } from 'eth-sig-util';
+import { bufferToHex } from 'ethereumjs-util';
 import { EventData } from 'web3-eth-contract';
 import { JsonRpcResponse } from 'web3-core-helpers';
 import { PrefixedHexString } from 'ethereumjs-tx';
@@ -14,6 +15,9 @@ import {
 } from './types/RelayTransactionRequest';
 import { DeployRequest, RelayRequest } from './EIP712/RelayRequest';
 import TruffleContract = require('@truffle/contract');
+import TypedRequestData, {
+    ForwardRequestType
+} from './EIP712/TypedRequestData';
 
 export function removeHexPrefix(hex: string): string {
     if (hex == null || typeof hex.replace !== 'function') {
@@ -312,4 +316,23 @@ function nonZeroDataBytes(data: Uint8Array): number {
     }
 
     return counter;
+}
+
+export function suffixData(relayRequest: RelayRequest, chainId: number) {
+    const cloneRequest = { ...relayRequest };
+    const signedData = new TypedRequestData(
+        chainId,
+        relayRequest.relayData.callForwarder,
+        cloneRequest as RelayRequest
+    );
+
+    const suffixData = bufferToHex(
+        TypedDataUtils.encodeData(
+            signedData.primaryType,
+            signedData.message,
+            signedData.types
+        ).slice((1 + ForwardRequestType.length) * 32)
+    );
+
+    return suffixData;
 }
