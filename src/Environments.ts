@@ -3,7 +3,7 @@
  * So far the only conflict we will have is migration to Istanbul, as ETC does not integrate it as of this writing.
  * TODO: see the differences between networks we want to support and make project structure multi-chain
  */
-import { RelayHubConfiguration } from './types/RelayHubConfiguration';
+import { RelayHubConfiguration } from '@rsksmart/rif-relay-contracts';
 
 export interface Environment {
     readonly chainId: number;

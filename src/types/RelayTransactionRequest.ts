@@ -1,6 +1,6 @@
 import { PrefixedHexString } from 'ethereumjs-tx';
 import ow from 'ow';
-import { DeployRequest, RelayRequest } from '../EIP712/RelayRequest';
+import { DeployRequest, RelayRequest } from '@rsksmart/rif-relay-contracts';
 
 export interface RelayMetadata {
     relayHubAddress: string;
