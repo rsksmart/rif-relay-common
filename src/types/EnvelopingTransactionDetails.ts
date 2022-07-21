@@ -6,6 +6,7 @@ export default interface EnvelopingTransactionDetails {
     readonly data: PrefixedHexString;
     readonly to: string;
     readonly tokenContract?: string;
+    readonly collectorContract?: string;
     readonly tokenAmount?: string;
     tokenGas?: string;
     readonly recoverer?: string;
