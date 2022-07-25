@@ -27,7 +27,7 @@
     ]
   },
   "dependencies": {
-    "@rsksmart/rif-relay-contracts": "github:rsksmart/rif-relay-contracts#feature/PP-45",
+    "@rsksmart/rif-relay-contracts": "0.0.2-alpha.9",
     "@truffle/contract": "~4.2.23",
     "bn.js": "5.1.2",
     "chalk": "~4.1.0",
