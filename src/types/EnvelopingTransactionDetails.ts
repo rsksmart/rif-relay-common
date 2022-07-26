@@ -52,7 +52,7 @@ export default interface EnvelopingTransactionDetails {
     /**
      * Use this to wait for the transaction receipt while processing a transaction
      */
-    readonly waitForTransactionReceipt?: boolean;
+    readonly ignoreTransactionReceipt?: boolean;
 
     retries?: number;
     initialBackoff?: number;
