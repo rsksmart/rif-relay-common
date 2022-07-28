@@ -22,7 +22,7 @@ const DEFAULT_RELAY_TIMEOUT_GRACE_SEC = 1800;
 const DEFAULT_LOOKUP_WINDOW_BLOCKS = 60000;
 const DEFAULT_CHAIN_ID = 33;
 
-describe('ContractInteractor Unit Test', () => {
+describe('ContractInteractor', () => {
     const defaultConfig: EnvelopingConfig = {
         preferredRelays: [],
         onlyPreferredRelays: false,
@@ -78,7 +78,7 @@ describe('ContractInteractor Unit Test', () => {
                 .callsFake(() => Promise.resolve(fakeIForwarderInstance));
         });
 
-        it('should use _createForwarder', async () => {
+        it('should use _createForwarder once', async () => {
             expect(
                 await contractInteractor.verifyForwarder(
                     fakeSuffixData,
@@ -87,6 +87,17 @@ describe('ContractInteractor Unit Test', () => {
                 )
             ).to.be.undefined;
             expect(contractInteractor._createForwarder).to.have.been.called;
+        });
+
+        it('should use forwarder.verify once', async () => {
+            expect(
+                await contractInteractor.verifyForwarder(
+                    fakeSuffixData,
+                    fakeRelayRequest,
+                    fakeSignature
+                )
+            ).to.be.undefined;
+            expect(fakeIForwarderInstance.verify).to.have.been.called;
         });
 
         it('should fail if callForwarder is null', async () => {
