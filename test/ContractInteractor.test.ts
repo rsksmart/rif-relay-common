@@ -79,24 +79,24 @@ describe('ContractInteractor', () => {
         });
 
         it('should use _createForwarder once', async () => {
-            expect(
-                await contractInteractor.verifyForwarder(
+            await expect(
+                contractInteractor.verifyForwarder(
                     fakeSuffixData,
                     fakeRelayRequest,
                     fakeSignature
                 )
-            ).to.be.undefined;
+            ).to.eventually.be.undefined;
             expect(contractInteractor._createForwarder).to.have.been.called;
         });
 
         it('should use forwarder.verify once', async () => {
-            expect(
-                await contractInteractor.verifyForwarder(
+            await expect(
+                contractInteractor.verifyForwarder(
                     fakeSuffixData,
                     fakeRelayRequest,
                     fakeSignature
                 )
-            ).to.be.undefined;
+            ).to.eventually.be.undefined;
             expect(fakeIForwarderInstance.verify).to.have.been.called;
         });
 
