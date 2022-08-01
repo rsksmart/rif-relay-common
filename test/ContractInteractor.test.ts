@@ -56,6 +56,7 @@ describe('ContractInteractor', () => {
     });
 
     describe('verifyForwarder', () => {
+        let _createForwarderStub: sinon.SinonStub;
         const fakeIForwarderInstance: sinon.SinonStubbedInstance<IForwarderInstance> &
             IForwarderInstance = stubInterface<IForwarderInstance>();
         const fakeSuffixData = 'fakeSuffix';
@@ -73,7 +74,7 @@ describe('ContractInteractor', () => {
         const fakeSignature = 'fake_signature';
 
         before(() => {
-            sinon
+            _createForwarderStub = sinon
                 .stub(contractInteractor, '_createForwarder')
                 .callsFake(() => Promise.resolve(fakeIForwarderInstance));
         });
@@ -100,36 +101,19 @@ describe('ContractInteractor', () => {
             expect(fakeIForwarderInstance.verify).to.have.been.called;
         });
 
-        it('should fail if callForwarder is null', async () => {
-            const error = new Error(
-                'Error: Invalid address passed to IForwarder.at(): null'
-            );
-            fakeRelayRequest.relayData.callForwarder = null;
-            try {
-                await contractInteractor.verifyForwarder(
-                    fakeSuffixData,
-                    fakeRelayRequest,
-                    fakeSignature
-                );
-            } catch (e) {
-                assert.equal(e.toString(), error.message.toString());
-            }
-        });
-
         it('should fail if suffixData is null', async () => {
             const error = new TypeError(
                 "Cannot read properties of null (reading 'substring')"
             );
             fakeIForwarderInstance.verify.throwsException(error);
-            try {
-                await contractInteractor.verifyForwarder(
+            await assert.isRejected(
+                contractInteractor.verifyForwarder(
                     null,
                     fakeRelayRequest,
                     fakeSignature
-                );
-            } catch (e) {
-                assert.equal(e.toString(), `${error.name}: ${error.message}`);
-            }
+                ),
+                error.message
+            );
         });
 
         it('should fail if RelayRequest is null', async () => {
@@ -137,15 +121,14 @@ describe('ContractInteractor', () => {
                 "Cannot read properties of null (reading 'relayData')"
             );
             fakeIForwarderInstance.verify.throwsException(error);
-            try {
-                await contractInteractor.verifyForwarder(
+            await assert.isRejected(
+                contractInteractor.verifyForwarder(
                     fakeSuffixData,
                     null,
                     fakeSignature
-                );
-            } catch (e) {
-                assert.equal(e.toString(), `${error.name}: ${error.message}`);
-            }
+                ),
+                error.message
+            );
         });
 
         it('should fail if Signature is null', async () => {
@@ -153,15 +136,27 @@ describe('ContractInteractor', () => {
                 "Cannot read properties of null (reading 'length')"
             );
             fakeIForwarderInstance.verify.throwsException(error);
-            try {
-                await contractInteractor.verifyForwarder(
+            await assert.isRejected(
+                contractInteractor.verifyForwarder(
                     fakeSuffixData,
                     fakeRelayRequest,
                     null
-                );
-            } catch (e) {
-                assert.equal(e.toString(), `${error.name}: ${error.message}`);
-            }
+                ),
+                error.message
+            );
+        });
+
+        it('should fail if callForwarder is null', async () => {
+            _createForwarderStub.restore();
+            fakeRelayRequest.relayData.callForwarder = null;
+            await assert.isRejected(
+                contractInteractor.verifyForwarder(
+                    fakeSuffixData,
+                    fakeRelayRequest,
+                    fakeSignature
+                ),
+                'Invalid address passed to IForwarder.at(): null'
+            );
         });
     });
 });
