@@ -7,11 +7,13 @@ import {
     constants,
     ContractInteractor,
     EnvelopingConfig,
-    ForwardRequest,
-    RelayData,
-    RelayRequest,
     Web3Provider
 } from '../src';
+import {
+    ForwardRequest,
+    RelayData,
+    RelayRequest
+} from '@rsksmart/rif-relay-contracts';
 
 use(sinonChai);
 use(chaiAsPromised);

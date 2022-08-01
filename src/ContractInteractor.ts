@@ -13,7 +13,6 @@ import {
     TransactionReceipt,
     WebsocketProvider
 } from 'web3-core';
-import { DeployRequest, RelayRequest } from './EIP712/RelayRequest';
 import {
     IRelayVerifier,
     IDeployVerifier,
@@ -21,7 +20,9 @@ import {
     IForwarder,
     IWalletFactory,
     ITokenHandler,
-    RelayManagerData
+    RelayManagerData,
+    DeployRequest,
+    RelayRequest
 } from '@rsksmart/rif-relay-contracts';
 import {
     IForwarderInstance,

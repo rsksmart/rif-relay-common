@@ -1,5 +1,3 @@
-import RelayData from './EIP712/RelayData';
-import TypedRequestData from './EIP712/TypedRequestData';
 import EnvelopingTransactionDetails from './types/EnvelopingTransactionDetails';
 import ContractInteractor from './ContractInteractor';
 import replaceErrors from './ErrorReplacerJSON';
@@ -12,9 +10,6 @@ export * from './dev/NetworkSimulatingProvider';
 export * from './dev/ProfilingProvider';
 export * from './dev/SendCallback';
 export * from './dev/WrapperProviderBase';
-export * from './EIP712/ForwardRequest';
-export * from './EIP712/RelayRequest';
-export * from './EIP712/TypedRequestData';
 export * from './types/EnvelopingConfig';
 export * from './types/EnvelopingTransactionDetails';
 export * from './types/RelayHubConfiguration';
@@ -27,8 +22,6 @@ export * from './Utils';
 export * from './VersionRegistry';
 
 export {
-    RelayData,
-    TypedRequestData,
     EnvelopingTransactionDetails,
     ContractInteractor,
     replaceErrors,
