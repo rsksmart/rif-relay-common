@@ -30,7 +30,7 @@
     "@openeth/truffle-typings": "0.0.6",
     "@openzeppelin/contracts": "~3.2.0",
     "@truffle/abi-utils": "~0.2.3",
-    "@rsksmart/rif-relay-contracts": "https://github.com/anarancio/rif-relay-contracts#PP-94/revenue-sharing-model",
+    "@rsksmart/rif-relay-contracts": "https://github.com/rsksmart/rif-relay-contracts#PP-94/revenue-sharing-model",
     "@truffle/contract": "~4.2.23",
     "bn.js": "5.1.2",
     "chalk": "~4.1.0",
