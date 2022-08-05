@@ -81,28 +81,6 @@ describe('ContractInteractor', () => {
                 .callsFake(() => Promise.resolve(fakeIForwarderInstance));
         });
 
-        it('should use _createForwarder once', async () => {
-            await expect(
-                contractInteractor.verifyForwarder(
-                    fakeSuffixData,
-                    fakeRelayRequest,
-                    fakeSignature
-                )
-            ).to.eventually.be.undefined;
-            expect(contractInteractor._createForwarder).to.have.been.called;
-        });
-
-        it('should use forwarder.verify once', async () => {
-            await expect(
-                contractInteractor.verifyForwarder(
-                    fakeSuffixData,
-                    fakeRelayRequest,
-                    fakeSignature
-                )
-            ).to.eventually.be.undefined;
-            expect(fakeIForwarderInstance.verify).to.have.been.called;
-        });
-
         it('should fail if suffixData is null', async () => {
             const error = new TypeError(
                 "Cannot read properties of null (reading 'substring')"
