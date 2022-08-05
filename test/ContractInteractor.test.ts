@@ -1,5 +1,5 @@
 import sinon, { stubInterface } from 'ts-sinon';
-import { expect, use, assert } from 'chai';
+import { use, assert } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import { IForwarderInstance } from '@rsksmart/rif-relay-contracts/types/truffle-contracts';
