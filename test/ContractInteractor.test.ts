@@ -1,5 +1,5 @@
 import sinon, { stubInterface } from 'ts-sinon';
-import { use, assert } from 'chai';
+import { expect, use, assert } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import { IForwarderInstance } from '@rsksmart/rif-relay-contracts/types/truffle-contracts';
@@ -59,8 +59,8 @@ describe('ContractInteractor', () => {
 
     describe('verifyForwarder', () => {
         let _createForwarderStub: sinon.SinonStub;
-        const fakeIForwarderInstance: sinon.SinonStubbedInstance<IForwarderInstance> &
-            IForwarderInstance = stubInterface<IForwarderInstance>();
+        let fakeIForwarderInstance: sinon.SinonStubbedInstance<IForwarderInstance> &
+            IForwarderInstance;
         const fakeSuffixData = 'fakeSuffix';
         const fakeRelayRequest: RelayRequest = {
             request: {
@@ -76,9 +76,66 @@ describe('ContractInteractor', () => {
         const fakeSignature = 'fake_signature';
 
         before(() => {
+            fakeIForwarderInstance = stubInterface<IForwarderInstance>();
             _createForwarderStub = sinon
                 .stub(contractInteractor, '_createForwarder')
                 .callsFake(() => Promise.resolve(fakeIForwarderInstance));
+        });
+
+        it('should verify EOA and call once _createForwarder', async () => {
+            await expect(
+                contractInteractor.verifyForwarder(
+                    fakeSuffixData,
+                    fakeRelayRequest,
+                    fakeSignature
+                )
+            ).to.eventually.be.undefined;
+            expect(contractInteractor._createForwarder).to.have.been.calledOnce;
+        });
+
+        it('should fail if EOA is not the owner', async () => {
+            const error = new TypeError(
+                'VM Exception while processing transaction: revert Not the owner of the SmartWallet'
+            );
+            fakeIForwarderInstance.verify.throwsException(error);
+            await assert.isRejected(
+                contractInteractor.verifyForwarder(
+                    fakeSuffixData,
+                    fakeRelayRequest,
+                    fakeSignature
+                ),
+                error.message
+            );
+        });
+
+        it('should fail if nonce mismatch', async () => {
+            const error = new TypeError(
+                'VM Exception while processing transaction: revert nonce mismatch'
+            );
+            fakeIForwarderInstance.verify.throwsException(error);
+            await assert.isRejected(
+                contractInteractor.verifyForwarder(
+                    fakeSuffixData,
+                    fakeRelayRequest,
+                    fakeSignature
+                ),
+                error.message
+            );
+        });
+
+        it('should fail if signature mismatch', async () => {
+            const error = new TypeError(
+                'VM Exception while processing transaction: revert Signature mismatch'
+            );
+            fakeIForwarderInstance.verify.throwsException(error);
+            await assert.isRejected(
+                contractInteractor.verifyForwarder(
+                    fakeSuffixData,
+                    fakeRelayRequest,
+                    fakeSignature
+                ),
+                error.message
+            );
         });
 
         it('should fail if suffixData is null', async () => {
