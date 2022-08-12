@@ -877,6 +877,17 @@ export default class ContractInteractor {
             `No receipt found for this transaction ${transactionHash}`
         );
     }
+
+    async verifyForwarder(
+        suffixData: string,
+        request: RelayRequest,
+        signature: string
+    ): Promise<void> {
+        const forwarder = await this._createForwarder(
+            request.relayData.callForwarder
+        );
+        await forwarder.verify(suffixData, request.request, signature);
+    }
 }
 
 /**
