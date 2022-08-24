@@ -2,7 +2,7 @@ export default interface PingResponse {
     relayWorkerAddress: string;
     relayManagerAddress: string;
     relayHubAddress: string;
-    collectorAddress?: string;
+    feesReceiver: string;
     minGasPrice: string;
     networkId?: string;
     chainId?: string;
