@@ -5,7 +5,7 @@ import { ERC20Instance } from '@rsksmart/rif-relay-contracts/types/truffle-contr
 import { use, assert } from 'chai';
 import BN from 'bn.js';
 import { ContractInteractor, EnvelopingConfig, Web3Provider } from '../src';
-import Token from '../src/types/token.type';
+import { Token } from '../src/types/token.type';
 
 const DEFAULT_CHAIN_ID = 33;
 
@@ -27,24 +27,27 @@ describe('ContractInteractor', () => {
     });
 
     describe('getERC20Token', () => {
-        it('should return testToken', async () => {
-            const testToken: Token = {
-                name: 'Test Token',
-                decimals: 18,
-                symbol: 'TKN',
-                contractAddress: address
-            };
+        const testToken: Token = {
+            name: 'Test Token',
+            decimals: 18,
+            symbol: 'TKN',
+            contractAddress: address
+        };
 
+        it('should return testToken', async () => {
             const fakeERC20Instance = stubInterface<ERC20Instance>({
                 name: Promise.resolve(testToken.name),
-                symbol: Promise.resolve(testToken.symbol),
-                decimals: Promise.resolve(new BN(testToken.decimals))
+                symbol: Promise.resolve(testToken.symbol!),
+                decimals: Promise.resolve(new BN(testToken.decimals!))
             });
             stub(contractInteractor, '_createERC20')
                 .withArgs(address)
                 .returns(Promise.resolve(fakeERC20Instance));
 
-            const token = await contractInteractor.getERC20Token(address);
+            const token = await contractInteractor.getERC20Token(address, {
+                symbol: true,
+                decimals: true
+            });
             assert.equal(token.name, testToken.name, 'Token name mismatch');
             assert.equal(
                 token.decimals,
@@ -58,10 +61,48 @@ describe('ContractInteractor', () => {
             );
         });
 
+        it('should return token with specified properties', async () => {
+            const fakeERC20Instance = stubInterface<ERC20Instance>({
+                name: Promise.resolve(testToken.name),
+                symbol: Promise.resolve(testToken.symbol!),
+                decimals: Promise.resolve(new BN(testToken.decimals!))
+            });
+            stub(contractInteractor, '_createERC20')
+                .withArgs(address)
+                .returns(Promise.resolve(fakeERC20Instance));
+
+            const token = await contractInteractor.getERC20Token(address);
+            assert.equal(token.name, testToken.name, 'Token name mismatch');
+            assert.equal(
+                token.decimals,
+                undefined,
+                'Token decimals should be undefined'
+            );
+            assert.equal(
+                token.symbol,
+                undefined,
+                'Token symbol should be undefined'
+            );
+        });
+
         it('should fail if address is null', async () => {
             await assert.isRejected(
                 contractInteractor.getERC20Token(null),
                 'Invalid address passed to ERC20.at(): null'
+            );
+        });
+
+        it('should fail if address is from a non-erc20 contract', async () => {
+            stub(contractInteractor, '_createERC20')
+                .withArgs('wrong_address')
+                .returns(
+                    Promise.reject(
+                        'Error: Returned error: VM Exception while processing transaction: transaction reverted'
+                    )
+                );
+            await assert.isRejected(
+                contractInteractor.getERC20Token('wrong_address'),
+                'Error: Returned error: VM Exception while processing transaction: transaction reverted'
             );
         });
     });

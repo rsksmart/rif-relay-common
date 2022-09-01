@@ -5,7 +5,6 @@ import PingResponse from './PingResponse';
 import TokenResponse from './TokenResponse';
 import VerifierResponse from './VerifierResponse';
 import VersionsManager from './VersionsManager';
-import Token from './types/token.type';
 
 export * from './dev/NetworkSimulatingProvider';
 export * from './dev/ProfilingProvider';
@@ -13,6 +12,7 @@ export * from './dev/SendCallback';
 export * from './dev/WrapperProviderBase';
 export * from './types/EnvelopingConfig';
 export * from './types/RelayTransactionRequest';
+export * from './types/token.type';
 export * from './AmountRequired';
 export * from './Constants';
 export * from './ContractInteractor';
@@ -27,6 +27,5 @@ export {
     PingResponse,
     TokenResponse,
     VerifierResponse,
-    VersionsManager,
-    Token
+    VersionsManager
 };

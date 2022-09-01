@@ -1,8 +1,11 @@
-type Token = {
+export type Token = {
     name: string;
-    decimals: number;
-    symbol: string;
+    decimals?: number;
+    symbol?: string;
     contractAddress: string;
 };
 
-export default Token;
+export type TokenOptions = {
+    decimals?: boolean;
+    symbol?: boolean;
+};

@@ -47,7 +47,7 @@ import VersionsManager from './VersionsManager';
 import { EnvelopingConfig } from './types/EnvelopingConfig';
 import EnvelopingTransactionDetails from './types/EnvelopingTransactionDetails';
 import { constants } from './Constants';
-import Token from './types/token.type';
+import { Token, TokenOptions } from './types/token.type';
 
 // Truffle Contract typings seem to be completely out of their minds
 import TruffleContract = require('@truffle/contract');
@@ -893,12 +893,15 @@ export default class ContractInteractor {
         );
     }
 
-    async getERC20Token(address: string): Promise<Token> {
+    async getERC20Token(
+        address: string,
+        options?: TokenOptions
+    ): Promise<Token> {
         const token = await this._createERC20(address);
         const [name, decimals, symbol] = await Promise.all([
             await token.name(),
-            (await token.decimals()).toNumber(),
-            await token.symbol()
+            options?.decimals ? (await token.decimals()).toNumber() : undefined,
+            options?.symbol ? await token.symbol() : undefined
         ]);
 
         return {
