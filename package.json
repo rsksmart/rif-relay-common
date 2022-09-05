@@ -1,80 +1,91 @@
 {
   "name": "@rsksmart/rif-relay-common",
   "version": "0.0.2-alpha.10",
-  "description": "This project contains all the common code for the rif relay system.",
+  "private": false,
+  "description": "This project should serve as a common library for all rif relay projects.",
+  "license": "MIT",
+  "author": "RIF Payments Team",
+  "contributors": [
+    {
+      "name": "Raúl Laprida",
+      "url": "https://github.com/raullaprida"
+    },
+    {
+      "name": "Marcelo Ortelli",
+      "url": "https://github.com/mortelli"
+    },
+    {
+      "name": "Antonio Morrone",
+      "url": "https://github.com/antomor"
+    },
+    {
+      "name": "Francisco Tobar",
+      "url": "https://github.com/franciscotobar"
+    },
+    {
+      "name": "David Ugbero",
+      "url": "https://github.com/david-iov"
+    },
+    {
+      "name": "Juraj Piar",
+      "url": "https://github.com/jurajpiar"
+    }
+  ],
   "main": "dist/index.js",
   "scripts": {
-    "prepack": "npmignore --auto",
-    "prepare": "scripts/prepare",
-    "build": "scripts/build",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
-    "prettier:fix": "npx prettier --write --ignore-unknown .",
-    "prettier": "npx prettier --check .",
-    "test": "mocha -r ts-node/register test/**/*.test.ts",
-    "dist": "scripts/dist",
-    "prepublishOnly": "scripts/prepublishOnly"
+    "build": "tsc",
+    "format": "prettier src/**/**/*.ts src/**/*.ts !.gitignore --write",
+    "lint": "eslint src/**/*.ts src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts src/**/*.ts --fix",
+    "prepare": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\"",
+    "tdd": "mocha -r ts-node/register --extensions ts --watch --watch-files src,test 'test/**/*.{test,spec}.ts'",
+    "test": "mocha -r ts-node/register --extensions ts 'test/**/*.{test,spec}.ts'"
   },
-  "author": "Relaying Services Team",
-  "license": "MIT",
+  "lint-staged": {
+    "*.ts": "eslint --cache --fix",
+    "package.json": "npx sort-package-json"
+  },
+  "dependencies": {
+    "@rsksmart/rif-relay-contracts": "github:rsksmart/rif-relay-contracts#feature/PP-278/PP-329/PP-427/change_to_ethers",
+    "chalk": "~4.1.0",
+    "ethers": "5.7.0",
+    "loglevel": "~1.7.0",
+    "npmignore": "^0.3.0",
+    "ow": "~0.17.0",
+    "semver": "~7.3.2"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.0.3",
+    "@commitlint/config-conventional": "^17.0.3",
+    "@nomiclabs/hardhat-ethers": "^2.1.1",
+    "@types/chai": "4.3.3",
+    "@types/mocha": "9.1.1",
+    "@types/semver": "^7.3.12",
+    "@types/sinon": "^10.0.13",
+    "@types/sinon-chai": "^3.2.8",
+    "@typescript-eslint/eslint-plugin": "^5.35.1",
+    "@typescript-eslint/parser": "^5.33.1",
+    "chai": "4.3.6",
+    "chai-as-promised": "^7.1.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-mocha": "^10.1.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.1",
+    "lint-staged": "^13.0.3",
+    "mocha": "10.0.0",
+    "prettier": "^2.7.1",
+    "sinon": "^14.0.0",
+    "sinon-chai": "^3.7.0",
+    "ts-node": "^10.9.1",
+    "typescript": "4.8.2"
+  },
   "publishConfig": {
     "ignore": [
       "!dist",
       "!build",
+      "!test",
       "src",
-      "test",
       ".github"
     ]
-  },
-  "dependencies": {
-    "@rsksmart/rif-relay-contracts": "0.0.2-alpha.10",
-    "@truffle/contract": "~4.2.23",
-    "bn.js": "5.1.2",
-    "chalk": "~4.1.0",
-    "eth-sig-util": "2.5.2",
-    "ethereumjs-common": "~1.5.2",
-    "ethereumjs-tx": "~2.1.2",
-    "ethereumjs-util": "~6.2.1",
-    "ethval": "~2.1.1",
-    "loglevel": "~1.7.0",
-    "npmignore": "^0.3.0",
-    "ow": "~0.17.0",
-    "patch-package": "~6.4.6",
-    "semver": "~7.3.2",
-    "web3": "1.2.6",
-    "web3-core": "1.2.6",
-    "web3-core-helpers": "1.2.6",
-    "web3-eth": "1.2.6",
-    "web3-eth-abi": "1.3.0",
-    "web3-eth-contract": "1.2.6",
-    "web3-utils": "1.2.6"
-  },
-  "devDependencies": {
-    "@openeth/truffle-typings": "0.0.6",
-    "@types/eth-sig-util": "2.1.0",
-    "@types/mocha": "^9.1.1",
-    "@types/sinon": "^10.0.13",
-    "@types/sinon-chai": "^3.2.8",
-    "@types/chai": "^4.3.1",
-    "@types/chai-as-promised": "^7.1.5",
-    "@types/node": "~13.13.4",
-    "@types/semver": "~7.3.4",
-    "@typescript-eslint/eslint-plugin": "~4.28.3",
-    "@typescript-eslint/parser": "~4.28.3",
-    "chai": "^4.3.6",
-    "chai-as-promised": "^7.1.1",
-    "eslint": "~7.30.0",
-    "husky": "~6.0.0",
-    "mocha": "^10.0.0",
-    "prettier": "2.3.0",
-    "sinon": "^14.0.0",
-    "sinon-chai": "^3.7.0",
-    "ts-loader": "~9.2.3",
-    "ts-node": "8.6.2",
-    "ts-sinon": "^2.0.2",
-    "typescript": "4.3.5",
-    "webpack": "~5.43.0",
-    "webpack-cli": "~4.7.2",
-    "webpack-node-externals": "~3.0.0"
   }
 }
