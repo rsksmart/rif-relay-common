@@ -91,19 +91,5 @@ describe('ContractInteractor', () => {
                 'Invalid address passed to ERC20.at(): null'
             );
         });
-
-        it('should fail if address is from a non-erc20 contract', async () => {
-            stub(contractInteractor, '_createERC20')
-                .withArgs('wrong_address')
-                .returns(
-                    Promise.reject(
-                        'Error: Returned error: VM Exception while processing transaction: transaction reverted'
-                    )
-                );
-            await assert.isRejected(
-                contractInteractor.getERC20Token('wrong_address'),
-                'Error: Returned error: VM Exception while processing transaction: transaction reverted'
-            );
-        });
     });
 });
