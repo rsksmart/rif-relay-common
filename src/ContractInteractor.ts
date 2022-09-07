@@ -22,28 +22,32 @@ import {
     ITokenHandler,
     RelayManagerData,
     DeployRequest,
-    RelayRequest
+    RelayRequest,
+    ERC20
 } from '@rsksmart/rif-relay-contracts';
-import { constants } from './Constants';
 import {
     IForwarderInstance,
     IRelayVerifierInstance,
     IRelayHubInstance,
     IDeployVerifierInstance,
     IWalletFactoryInstance,
-    ITokenHandlerInstance
+    ITokenHandlerInstance,
+    ERC20Instance
 } from '@rsksmart/rif-relay-contracts/types/truffle-contracts';
+import { toBN, toHex } from 'web3-utils';
+import BN from 'bn.js';
+
+import {
+    DeployTransactionRequest,
+    RelayTransactionRequest
+} from './types/RelayTransactionRequest';
 import { event2topic, sleep } from './Utils';
 import replaceErrors from './ErrorReplacerJSON';
 import VersionsManager from './VersionsManager';
 import { EnvelopingConfig } from './types/EnvelopingConfig';
 import EnvelopingTransactionDetails from './types/EnvelopingTransactionDetails';
-import { toBN, toHex } from 'web3-utils';
-import BN from 'bn.js';
-import {
-    DeployTransactionRequest,
-    RelayTransactionRequest
-} from './types/RelayTransactionRequest';
+import { constants } from './Constants';
+import { Token, TokenOptions } from './types/token.type';
 
 // Truffle Contract typings seem to be completely out of their minds
 import TruffleContract = require('@truffle/contract');
@@ -93,6 +97,7 @@ export default class ContractInteractor {
     private readonly IRelayHubContract: Contract<IRelayHubInstance>;
     private readonly IForwarderContract: Contract<IForwarderInstance>;
     private readonly IWalletFactoryContract: Contract<IWalletFactoryInstance>;
+    private readonly ERC20Contract: Contract<ERC20Instance>;
 
     private relayVerifierInstance!: IRelayVerifierInstance;
     private deployVerifierInstance!: IDeployVerifierInstance;
@@ -145,12 +150,18 @@ export default class ContractInteractor {
             contractName: 'ITokenHandler',
             abi: ITokenHandler.abi
         });
+        // @ts-ignore
+        this.ERC20Contract = TruffleContract({
+            contractName: 'ERC20',
+            abi: ERC20.abi
+        });
         this.IRelayHubContract.setProvider(this.provider, undefined);
         this.IRelayVerifierContract.setProvider(this.provider, undefined);
         this.IDeployVerifierContract.setProvider(this.provider, undefined);
         this.IForwarderContract.setProvider(this.provider, undefined);
         this.IWalletFactoryContract.setProvider(this.provider, undefined);
         this.ITokenHandlerContract.setProvider(this.provider, undefined);
+        this.ERC20Contract.setProvider(this.provider, undefined);
     }
 
     getProvider(): provider {
@@ -277,6 +288,10 @@ export default class ContractInteractor {
 
     async _createForwarder(address: string): Promise<IForwarderInstance> {
         return await this.IForwarderContract.at(address);
+    }
+
+    async _createERC20(address: string): Promise<ERC20Instance> {
+        return await this.ERC20Contract.at(address);
     }
 
     async _createFactory(address: string): Promise<IWalletFactoryInstance> {
@@ -876,6 +891,25 @@ export default class ContractInteractor {
         throw new Error(
             `No receipt found for this transaction ${transactionHash}`
         );
+    }
+
+    async getERC20Token(
+        address: string,
+        options?: TokenOptions
+    ): Promise<Token> {
+        const token = await this._createERC20(address);
+        const [name, decimals, symbol] = await Promise.all([
+            await token.name(),
+            options?.decimals ? (await token.decimals()).toNumber() : undefined,
+            options?.symbol ? await token.symbol() : undefined
+        ]);
+
+        return {
+            name,
+            decimals,
+            symbol,
+            contractAddress: address
+        };
     }
 }
 
