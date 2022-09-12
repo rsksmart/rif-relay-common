@@ -47,7 +47,9 @@
   },
   "dependencies": {
     "@rsksmart/rif-relay-contracts": "github:rsksmart/rif-relay-contracts#feature/PP-278/PP-329/PP-427/change_to_ethers",
+    "@types/config": "^3.3.0",
     "chalk": "~4.1.0",
+    "config": "^3.3.8",
     "ethers": "5.7.0",
     "loglevel": "~1.7.0",
     "npmignore": "^0.3.0",
@@ -70,6 +72,7 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-mocha": "^10.1.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "ethereum-waffle": "^3.4.4",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.3",
     "mocha": "10.0.0",

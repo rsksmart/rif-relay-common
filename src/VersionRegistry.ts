@@ -1,53 +1,59 @@
 // import {IVersionRegistry} from '@rsksmart/rif-relay-contracts/typechain-types/contracts/interfaces';
+// import { VersionRegistry as VersionRegistryContract } from '@rsksmart/rif-relay-contracts/typechain-types'; '@rsksmart/rif-relay-contracts/typechain-types/contracts/utils/VersionRegistry'
 // import { getContractAt } from '@nomiclabs/hardhat-ethers/internal/helpers';
-// import { ethers } from 'ethers';
+// import { contractFactory } from './factories/contractFactory';
+// import { ethers, getDefaultProvider } from 'ethers';
+// import config from 'config';
+// // import { ethers } from 'ethers';
 
-// export function string32(s: string): PrefixedHexString {
-//     return bufferToHex(Buffer.from(s)).padEnd(66, '0');
+// // export function string32(s: string): PrefixedHexString {
+// //     return bufferToHex(Buffer.from(s)).padEnd(66, '0');
+// // }
+
+// // // convert a bytes32 into a string, removing any trailing zeros
+// // export function bytes32toString(s: PrefixedHexString): string {
+// //     return Buffer.from(
+// //         s.replace(/^(?:0x)?(.*?)(00)*$/, '$1'),
+// //         'hex'
+// //     ).toString();
+// // }
+
+// export interface VersionInfo {
+//   value: string;
+//   version: string;
+//   time: number;
+//   canceled: boolean;
+//   cancelReason: string;
 // }
 
-// // convert a bytes32 into a string, removing any trailing zeros
-// export function bytes32toString(s: PrefixedHexString): string {
-//     return Buffer.from(
-//         s.replace(/^(?:0x)?(.*?)(00)*$/, '$1'),
-//         'hex'
-//     ).toString();
-// }
-
-export interface VersionInfo {
-  value: string;
-  version: string;
-  time: number;
-  canceled: boolean;
-  cancelReason: string;
-}
-
-// -juraj Only used in Rif Relay Server
+// const registryContract: string = config.get('registryContractAddress'); // TODO: create config handler
 
 // export class VersionRegistry implements IVersionRegistry {
+//   private _registryContract: VersionRegistryContract;
+
 //   constructor() {
-//     this.web3 = new Web3(web3provider);
-//     this.registryContract = new this.web3.eth.Contract(
-//       IVersionRegistry.abi as any,
-//       registryAddress
-//     );
+//     this._registryContract = contractFactory<VersionRegistryContract>(
+//       'VersionRegistry',
+//       registryContract,
+//       ethers.getDefaultProvider()
+//     ); // TODO: make sure the getDefaultProvider method
 //   }
 
-//   async isValid(): Promise<boolean> {
-//     // validate the contract exists, and has the registry API
-//     // Check added for RSKJ: when the contract does not exist in RSKJ it replies to the getCode call with 0x00
-//     const code = await this.web3.eth.getCode(
-//       this.registryContract.options.address
-//     );
-//     if (code === '0x' || code === '0x00') {
-//       return false;
-//     }
-//     // this check return 'true' only for owner
-//     // return this.registryContract.methods.addVersion('0x414243', '0x313233', '0x313233').estimateGas(this.sendOptions)
-//     //   .then(() => true)
-//     //   .catch(() => false)
-//     return true;
-//   }
+//   // async isValid(): Promise<boolean> {
+//   //   // validate the contract exists, and has the registry API
+//   //   // Check added for RSKJ: when the contract does not exist in RSKJ it replies to the getCode call with 0x00
+//   //   const code = await this.web3.eth.getCode(
+//   //     this._registryContract.options.address
+//   //   );
+//   //   if (code === '0x' || code === '0x00') {
+//   //     return false;
+//   //   }
+//   //   // this check return 'true' only for owner
+//   //   // return this._registryContract.methods.addVersion('0x414243', '0x313233', '0x313233').estimateGas(this.sendOptions)
+//   //   //   .then(() => true)
+//   //   //   .catch(() => false)
+//   //   return true;
+//   // }
 
 //   /**
 //    * return the latest "mature" version from the registry
@@ -65,15 +71,13 @@ export interface VersionInfo {
 //     delayPeriod: number,
 //     optInVersion = ''
 //   ): Promise<VersionInfo> {
-//     const [versions, now] = await Promise.all([
-//       this.getAllVersions(id),
-//       this.web3.eth.getBlock('latest').then((b) => b.timestamp as number),
-//     ]);
+//     const versions = await this.getAllVersions(id);
+//     const latestBlockTimestamp = (await getDefaultProvider().getBlock('latest')).timestamp;
 
 //     const ver = versions.find(
 //       (v) =>
 //         !v.canceled &&
-//         (v.time + delayPeriod <= now || v.version === optInVersion)
+//         (v.time + delayPeriod <= latestBlockTimestamp || v.version === optInVersion)
 //     );
 //     if (ver == null) {
 //       throw new Error(`getVersion(${id}) - no version found`);
@@ -87,10 +91,24 @@ export interface VersionInfo {
 //    * @param id object id to return version history for
 //    */
 //   async getAllVersions(id: string): Promise<VersionInfo[]> {
-//     const events = await this.registryContract.getPastEvents('allEvents', {
-//       fromBlock: 1,
-//       topics: [null, string32(id)],
-//     });
+//     const idHash = ethers.utils.id(id);
+//     const versionAddedEvents = this._registryContract
+//       .filters.VersionAdded(idHash).topics;
+
+//     const versionsCancelledEvents = this._registryContract
+//       .filters.VersionCanceled(idHash).topics;
+
+//     versionAddedEvents.map((v) => ({
+//       version: bytes32toString(e.returnValues.version),
+//       canceled: cancelReasons[e.returnValues.version] != null,
+//       cancelReason: cancelReasons[e.returnValues.version],
+//       value: e.returnValues.value,
+//       time: parseInt(e.returnValues.time),
+//     }))
+
+//     // queryFilter('allEvents', fromBlock: 1,
+//     //   topics: [null, string32(id)],
+//     // });
 //     // map of ver=>reason, for every canceled version
 //     const cancelReasons: { [key: string]: string } = events
 //       .filter((e) => e.event === 'VersionCanceled')
@@ -126,7 +144,7 @@ export interface VersionInfo {
 
 //   // return all IDs registered
 //   async listIds(): Promise<string[]> {
-//     const events = await this.registryContract.getPastEvents('VersionAdded', {
+//     const events = await this._registryContract.getPastEvents('VersionAdded', {
 //       fromBlock: 1,
 //     });
 //     const ids = new Set(events.map((e) => bytes32toString(e.returnValues.id)));
@@ -140,7 +158,7 @@ export interface VersionInfo {
 //     sendOptions = {}
 //   ): Promise<void> {
 //     await this.checkVersion(id, version, false);
-//     await this.registryContract.methods
+//     await this._registryContract.methods
 //       .addVersion(string32(id), string32(version), value)
 //       .send({ ...this.sendOptions, ...sendOptions });
 //   }
@@ -152,7 +170,7 @@ export interface VersionInfo {
 //     sendOptions = {}
 //   ): Promise<void> {
 //     await this.checkVersion(id, version, true);
-//     await this.registryContract.methods
+//     await this._registryContract.methods
 //       .cancelVersion(string32(id), string32(version), cancelReason)
 //       .send({ ...this.sendOptions, ...sendOptions });
 //   }

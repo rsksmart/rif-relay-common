@@ -1,31 +1,33 @@
 {
   "compilerOptions": {
-    "lib": ["es2020", "esnext"],
+    "lib": [
+      "es2018",
+      "esnext"
+    ],
     "target": "es2020",
-    "module": "commonjs",
-    "strict": true,
+    "module": "CommonJS",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "outDir": "dist",
     "declaration": true,
-    "baseUrl": "./",
-    "allowJs": true,
-    "strictNullChecks": false,
-    "strictPropertyInitialization": false,
     "moduleResolution": "node",
-    "alwaysStrict": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    // "typeRoots": [
-    //   "node_modules/@types"
-    // ],
-    "types": [
-      "node",
-      "mocha",
-      "chai"
+    "typeRoots": [
+      "node_modules/@types"
     ],
-    "sourceMap": true
+    "types": ["node", "mocha", "chai"],
+    "sourceMap": true,
+  },
+  "include": ["test/**/*.ts", "src/**/*"],
+  "exclude": ["dist", "node_modules", "build", "test"],
+  "ts-node": {
+    "compilerOptions": {
+      "esModuleInterop": true,
+      "module": "commonjs",
+      "target": "ES6"
+    }
   }
 }
