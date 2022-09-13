@@ -1,4 +1,4 @@
-import { LogLevelNumbers } from 'loglevel';
+import type { LogLevelNumbers } from 'loglevel';
 
 /**
  * @field methodSuffix - allows use of versioned methods, i.e. 'eth_signTypedData_v4'. Should be '_v4' for Metamask

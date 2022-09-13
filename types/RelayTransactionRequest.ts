@@ -1,5 +1,5 @@
 import ow from 'ow';
-import {
+import type {
   EnvelopingTypes
 } from '@rsksmart/rif-relay-contracts/typechain-types/contracts/RelayHub';
 
@@ -20,7 +20,7 @@ export interface DeployTransactionRequest {
   metadata: RelayMetadata;
 }
 
-export const DeployTransactionRequestShape = {
+export const deployTransactionRequestShape = {
   relayRequest: {
     request: {
       relayHub: ow.string,
@@ -49,7 +49,7 @@ export const DeployTransactionRequestShape = {
   },
 };
 
-export const RelayTransactionRequestShape = {
+export const relayTransactionRequestShape = {
   relayRequest: {
     request: {
       relayHub: ow.string,

@@ -1,33 +1,24 @@
 {
+  "extends": "@tsconfig/node16-strictest/tsconfig.json",
   "compilerOptions": {
-    "lib": [
-      "es2018",
-      "esnext"
-    ],
-    "target": "es2020",
-    "module": "CommonJS",
-    "esModuleInterop": true,
     "resolveJsonModule": true,
     "outDir": "dist",
     "declaration": true,
-    "moduleResolution": "node",
+    "baseUrl": "./",
+    "allowJs": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "exactOptionalPropertyTypes": false,
+    "alwaysStrict": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "typeRoots": [
-      "node_modules/@types"
+    "extendedDiagnostics":true,
+    "noErrorTruncation": true,
+    "types": [
+      "node",
+      "mocha",
+      "chai"
     ],
-    "types": ["node", "mocha", "chai"],
-    "sourceMap": true,
+    "sourceMap": true
   },
-  "include": ["test/**/*.ts", "src/**/*"],
-  "exclude": ["dist", "node_modules", "build", "test"],
-  "ts-node": {
-    "compilerOptions": {
-      "esModuleInterop": true,
-      "module": "commonjs",
-      "target": "ES6"
-    }
-  }
 }

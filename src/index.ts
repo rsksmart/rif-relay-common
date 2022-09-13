@@ -1,5 +1,5 @@
-import EnvelopingTransactionDetails from '../types/EnvelopingTransactionDetails';
-import VersionsManager from './VersionsManager';
+import type EnvelopingTransactionDetails from '../types/EnvelopingTransactionDetails';
+import type VersionsManager from './VersionsManager';
 
 export * from '../types/EnvelopingConfig';
 export * from '../types/EnvelopingTransactionDetails';

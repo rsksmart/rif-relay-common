@@ -1,8 +1,7 @@
-import sinon, { createStubInstance } from 'sinon';
-import { expect, use, assert } from 'chai';
+import { use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {IForwarder} from '@rsksmart/rif-relay-contracts/typechain-types/contracts/interfaces';
+// import {IForwarder} from '@rsksmart/rif-relay-contracts/typechain-types/contracts/interfaces';
 // import {
 //     constants,
 //     ContractInteractor,
@@ -13,13 +12,13 @@ import {IForwarder} from '@rsksmart/rif-relay-contracts/typechain-types/contract
 use(sinonChai);
 use(chaiAsPromised);
 
-const GAS_PRICE_PERCENT = 0;
-const MAX_RELAY_NONCE_GAP = 3;
-const DEFAULT_RELAY_TIMEOUT_GRACE_SEC = 1800;
-const DEFAULT_LOOKUP_WINDOW_BLOCKS = 60000;
-const DEFAULT_CHAIN_ID = 33;
+// const GAS_PRICE_PERCENT = 0;
+// const MAX_RELAY_NONCE_GAP = 3;
+// const DEFAULT_RELAY_TIMEOUT_GRACE_SEC = 1800;
+// const DEFAULT_LOOKUP_WINDOW_BLOCKS = 60000;
+// const DEFAULT_CHAIN_ID = 33;
 
-describe('ContractInteractor', () => {
+describe('ContractInteractor', function() {
     // const defaultConfig: EnvelopingConfig = {
     //     preferredRelays: [],
     //     onlyPreferredRelays: false,

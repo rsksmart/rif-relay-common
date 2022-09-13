@@ -1,6 +1,6 @@
-import * as contracts from '@rsksmart/rif-relay-contracts/typechain-types';
+import * as contracts from '@rsksmart/rif-relay-contracts/dist/typechain-types';
 import { BaseContract, Contract } from 'ethers';
-import { ContractName, SignerOrProvider } from '../types';
+import type { ContractName, SignerOrProvider } from '../types';
 
 /**
  * Creates an instance of the given contract type and connects to deployed contract at address

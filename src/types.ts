@@ -1,6 +1,6 @@
-import * as contracts from '@rsksmart/rif-relay-contracts/typechain-types';
-import { Provider } from '@ethersproject/providers';
-import { ContractTransaction, Signer } from 'ethers';
+import type * as contracts from '@rsksmart/rif-relay-contracts/dist/typechain-types';
+import type { Provider } from '@ethersproject/providers';
+import type { ContractTransaction, Signer } from 'ethers';
 
 /**
  * Response retrieved for each sdk call:

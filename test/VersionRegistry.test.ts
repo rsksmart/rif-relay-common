@@ -1,9 +1,9 @@
-import { VersionRegistry } from "@rsksmart/rif-relay-contracts/typechain-types"
+// import { VersionRegistry } from "@rsksmart/rif-relay-contracts/typechain-types"
 
 
-describe('VersionRegistry', () => {
-  describe('getAllVersions', () => {
-    it('', async () => {
+describe('VersionRegistry', function() {
+  describe('getAllVersions', function() {
+    it('', async function() {
       // const registryContract = 
     })
   })
