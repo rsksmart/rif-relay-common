@@ -1,6 +1,6 @@
 {
   "name": "@rsksmart/rif-relay-common",
-  "version": "0.0.2-alpha.8",
+  "version": "0.0.2-alpha.10",
   "description": "This project contains all the common code for the rif relay system.",
   "main": "dist/index.js",
   "scripts": {
@@ -58,6 +58,10 @@
     "@types/chai-as-promised": "^7.1.5",
     "@types/eth-sig-util": "2.1.0",
     "@types/mocha": "^9.1.1",
+    "@types/sinon": "^10.0.13",
+    "@types/sinon-chai": "^3.2.8",
+    "@types/chai": "^4.3.1",
+    "@types/chai-as-promised": "^7.1.5",
     "@types/node": "~13.13.4",
     "@types/semver": "~7.3.4",
     "@typescript-eslint/eslint-plugin": "~4.28.3",
@@ -68,6 +72,8 @@
     "husky": "~6.0.0",
     "mocha": "^10.0.0",
     "prettier": "2.3.0",
+    "sinon": "^14.0.0",
+    "sinon-chai": "^3.7.0",
     "ts-loader": "~9.2.3",
     "ts-node": "8.6.2",
     "ts-sinon": "^2.0.2",

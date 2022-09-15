@@ -906,6 +906,17 @@ export default class ContractInteractor {
         );
     }
 
+    async verifyForwarder(
+        suffixData: string,
+        request: RelayRequest,
+        signature: string
+    ): Promise<void> {
+        const forwarder = await this._createForwarder(
+            request.relayData.callForwarder
+        );
+        await forwarder.verify(suffixData, request.request, signature);
+    }
+
     async getERC20Token(
         address: string,
         options?: TokenOptions
