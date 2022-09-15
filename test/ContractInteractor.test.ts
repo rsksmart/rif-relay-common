@@ -215,8 +215,8 @@ describe('ContractInteractor', () => {
         it('should return testToken', async () => {
             const fakeERC20Instance = stubInterface<ERC20Instance>({
                 name: Promise.resolve(testToken.name),
-                symbol: Promise.resolve(testToken.symbol!),
-                decimals: Promise.resolve(new BN(testToken.decimals!))
+                symbol: Promise.resolve(testToken.symbol as string),
+                decimals: Promise.resolve(new BN(testToken.decimals as number))
             });
             stub(contractInteractor, '_createERC20')
                 .withArgs(address)
@@ -243,8 +243,8 @@ describe('ContractInteractor', () => {
         it('should return token with specified properties', async () => {
             const fakeERC20Instance = stubInterface<ERC20Instance>({
                 name: Promise.resolve(testToken.name),
-                symbol: Promise.resolve(testToken.symbol!),
-                decimals: Promise.resolve(new BN(testToken.decimals!))
+                symbol: Promise.resolve(testToken.symbol as string),
+                decimals: Promise.resolve(new BN(testToken.decimals as number))
             });
             stub(contractInteractor, '_createERC20')
                 .withArgs(address)
