@@ -46,7 +46,7 @@
     "package.json": "npx sort-package-json"
   },
   "dependencies": {
-    "@rsksmart/rif-relay-contracts": "github:rsksmart/rif-relay-contracts#feature/PP-278/PP-329/PP-427/change_to_ethers",
+    "@rsksmart/rif-relay-contracts": "github:rsksmart/rif-relay-contracts#feature/PP-278/PP-329/upgrade_contracts",
     "@types/config": "^3.3.0",
     "chalk": "~4.1.0",
     "config": "^3.3.8",
