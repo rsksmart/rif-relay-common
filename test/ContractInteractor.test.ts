@@ -1,13 +1,23 @@
-import { expect, use, assert } from 'chai';
+import { JsonRpcProvider } from '@ethersproject/providers/lib';
+import {
+  IForwarder,
+  IForwarder__factory,
+  RelayHub__factory,
+} from '@rsksmart/rif-relay-contracts/dist/typechain-types';
+import type {
+  EnvelopingTypes,
+  RelayHub,
+} from '@rsksmart/rif-relay-contracts/dist/typechain-types/contracts/RelayHub';
+import { expect, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import { constants } from 'ethers';
-import {BaseProvider} from '@ethersproject/providers/lib'
+import { constants, ethers, Wallet } from 'ethers';
+import { createSandbox, SinonStubbedInstance } from 'sinon';
 import sinonChai from 'sinon-chai';
-import sinon from 'sinon';
 import ContractInteractor from '../src/ContractInteractor';
+import VersionsManager from '../src/VersionsManager';
 import type { EnvelopingConfig } from '../types/EnvelopingConfig';
-import type {EnvelopingTypes} from '@rsksmart/rif-relay-contracts/dist/typechain-types/contracts/RelayHub';
-import type {IForwarder} from "@rsksmart/rif-relay-contracts/dist/typechain-types"
+
+const sandbox = createSandbox();
 
 use(sinonChai);
 use(chaiAsPromised);
@@ -17,177 +27,188 @@ const MAX_RELAY_NONCE_GAP = 3;
 const DEFAULT_RELAY_TIMEOUT_GRACE_SEC = 1800;
 const DEFAULT_LOOKUP_WINDOW_BLOCKS = 60000;
 const DEFAULT_CHAIN_ID = 33;
+const ADDRESS_ZERO = constants.AddressZero;
 
-describe('ContractInteractor', () => {
-    const defaultConfig: EnvelopingConfig = {
-        preferredRelays: [],
-        onlyPreferredRelays: false,
-        relayLookupWindowParts: 1,
-        relayLookupWindowBlocks: DEFAULT_LOOKUP_WINDOW_BLOCKS,
-        gasPriceFactorPercent: GAS_PRICE_PERCENT,
-        minGasPrice: 60000000, // 0.06 GWei
-        maxRelayNonceGap: MAX_RELAY_NONCE_GAP,
-        sliceSize: 3,
-        relayTimeoutGrace: DEFAULT_RELAY_TIMEOUT_GRACE_SEC,
-        methodSuffix: '',
-        jsonStringifyRequest: false,
-        chainId: DEFAULT_CHAIN_ID,
-        relayHubAddress: constants.AddressZero,
-        deployVerifierAddress: constants.AddressZero,
-        relayVerifierAddress: constants.AddressZero,
-        forwarderAddress: constants.AddressZero,
-        smartWalletFactoryAddress: constants.AddressZero,
-        logLevel: 0,
-        clientId: '1'
+describe('ContractInteractor', function () {
+  const defaultConfig: EnvelopingConfig = {
+    preferredRelays: [],
+    onlyPreferredRelays: false,
+    relayLookupWindowParts: 1,
+    relayLookupWindowBlocks: DEFAULT_LOOKUP_WINDOW_BLOCKS,
+    gasPriceFactorPercent: GAS_PRICE_PERCENT,
+    minGasPrice: 60000000, // 0.06 GWei
+    maxRelayNonceGap: MAX_RELAY_NONCE_GAP,
+    sliceSize: 3,
+    relayTimeoutGrace: DEFAULT_RELAY_TIMEOUT_GRACE_SEC,
+    methodSuffix: '',
+    jsonStringifyRequest: false,
+    chainId: DEFAULT_CHAIN_ID,
+    relayHubAddress: ADDRESS_ZERO,
+    deployVerifierAddress: ADDRESS_ZERO,
+    relayVerifierAddress: ADDRESS_ZERO,
+    forwarderAddress: ADDRESS_ZERO,
+    smartWalletFactoryAddress: ADDRESS_ZERO,
+    logLevel: 0,
+    clientId: '1',
+  };
+  let fakeProvider: SinonStubbedInstance<JsonRpcProvider>;
+  let contractInteractor: ContractInteractor;
+  let owner: Wallet;
+
+  beforeEach(async function () {
+    owner = ethers.Wallet.createRandom();
+    fakeProvider = sandbox.createStubInstance(JsonRpcProvider);
+
+    sandbox
+      .stub(VersionsManager.prototype, 'isMinorSameOrNewer')
+      .callsFake(() => true);
+
+    sandbox.stub(RelayHub__factory, 'connect').callsFake(
+      () =>
+        ({
+          versionHub: () => {
+            return 666;
+          },
+        } as unknown as RelayHub)
+    );
+
+    contractInteractor = await ContractInteractor.getInstance(
+      fakeProvider,
+      owner,
+      defaultConfig
+    );
+  });
+
+  afterEach(function () {
+    sandbox.restore();
+  });
+  after(function () {
+    sandbox.restore();
+  });
+
+  describe('verifyForwarder', function () {
+    const fakeSuffixData = 'fakeSuffix';
+    const fakeRelayRequest: EnvelopingTypes.RelayRequestStruct = {
+      request: {
+        to: 'fake_address',
+        data: 'fake_data',
+        gas: '1',
+      } as IForwarder.ForwardRequestStruct,
+      relayData: {
+        gasPrice: '0',
+        callForwarder: 'fake_address',
+      } as EnvelopingTypes.RelayDataStruct,
     };
-    let fakeProvider: BaseProvider;
-    let contractInteractor: ContractInteractor;
+    const fakeSignature = 'fake_signature';
 
-    before(() => {
-        fakeProvider = sinon.createStubInstance(BaseProvider);
-        contractInteractor = new ContractInteractor(
-            fakeProvider,
-            defaultConfig
-        );
+    const fakeForwarder: IForwarder = <IForwarder>(<unknown>{});
+    beforeEach(function () {
+      sandbox
+        .stub(IForwarder__factory, 'connect')
+        .callsFake(() => fakeForwarder);
+
+      fakeForwarder.verify = sandbox.stub();
     });
 
-    describe('verifyForwarder', () => {
-        let _createForwarderStub: sinon.SinonStub;
-        let fakeIForwarderInstance: sinon.SinonStubbedInstance<IForwarder> &
-        IForwarder;
-        const fakeSuffixData = 'fakeSuffix';
-        const fakeRelayRequest: EnvelopingTypes.RelayRequestStruct = {
-            request: {
-                to: 'fake_address',
-                data: 'fake_data',
-                gas: '1'
-            } as IForwarder.ForwardRequestStruct,
-            relayData: {
-                gasPrice: '0',
-                callForwarder: 'fake_address'
-            } as EnvelopingTypes.RelayDataStruct
-        };
-        const fakeSignature = 'fake_signature';
-
-        before(() => {
-            fakeIForwarderInstance = sinon.createStubInstance(sinon.stub());
-            _createForwarderStub = sinon
-                .stub(contractInteractor, '_createForwarder')
-                .callsFake(() => Promise.resolve(fakeIForwarderInstance));
-        });
-
-        it('should verify EOA and call once _createForwarder', async () => {
-            await expect(
-                contractInteractor.verifyForwarder(
-                    fakeSuffixData,
-                    fakeRelayRequest,
-                    fakeSignature
-                )
-            ).to.eventually.be.undefined;
-            expect(contractInteractor._createForwarder).to.have.been.calledOnce;
-        });
-
-        it('should fail if EOA is not the owner', async () => {
-            const error = new TypeError(
-                'VM Exception while processing transaction: revert Not the owner of the SmartWallet'
-            );
-            fakeIForwarderInstance.verify.throwsException(error);
-            await assert.isRejected(
-                contractInteractor.verifyForwarder(
-                    fakeSuffixData,
-                    fakeRelayRequest,
-                    fakeSignature
-                ),
-                error.message
-            );
-        });
-
-        it('should fail if nonce mismatch', async () => {
-            const error = new TypeError(
-                'VM Exception while processing transaction: revert nonce mismatch'
-            );
-            fakeIForwarderInstance.verify.throwsException(error);
-            await assert.isRejected(
-                contractInteractor.verifyForwarder(
-                    fakeSuffixData,
-                    fakeRelayRequest,
-                    fakeSignature
-                ),
-                error.message
-            );
-        });
-
-        it('should fail if signature mismatch', async () => {
-            const error = new TypeError(
-                'VM Exception while processing transaction: revert Signature mismatch'
-            );
-            fakeIForwarderInstance.verify.throwsException(error);
-            await assert.isRejected(
-                contractInteractor.verifyForwarder(
-                    fakeSuffixData,
-                    fakeRelayRequest,
-                    fakeSignature
-                ),
-                error.message
-            );
-        });
-
-        it('should fail if suffixData is undefined', async () => {
-            const error = new TypeError(
-                "Cannot read properties of undefined (reading 'substring')"
-            );
-            fakeIForwarderInstance.verify.throwsException(error);
-            await assert.isRejected(
-                contractInteractor.verifyForwarder(
-                    undefined as unknown as string,
-                    fakeRelayRequest,
-                    fakeSignature
-                ),
-                error.message
-            );
-        });
-
-        it('should fail if RelayRequest is undefined', async () => {
-            const error = new TypeError(
-                "Cannot read properties of undefined (reading 'relayData')"
-            );
-            fakeIForwarderInstance.verify.throwsException(error);
-            await assert.isRejected(
-                contractInteractor.verifyForwarder(
-                    fakeSuffixData,
-                    undefined as unknown as EnvelopingTypes.RelayRequestStruct,
-                    fakeSignature
-                ),
-                error.message
-            );
-        });
-
-        it('should fail if Signature is undefined', async () => {
-            const error = new TypeError(
-                "Cannot read properties of undefined (reading 'length')"
-            );
-            fakeIForwarderInstance.verify.throwsException(error);
-            await assert.isRejected(
-                contractInteractor.verifyForwarder(
-                    fakeSuffixData,
-                    fakeRelayRequest,
-                    undefined as unknown as string
-                ),
-                error.message
-            );
-        });
-
-        it('should fail if callForwarder is undefined', async () => {
-            _createForwarderStub.restore();
-            fakeRelayRequest.relayData.callForwarder = undefined as unknown as string;
-            await assert.isRejected(
-                contractInteractor.verifyForwarder(
-                    fakeSuffixData,
-                    fakeRelayRequest,
-                    fakeSignature
-                ),
-                'Invalid address passed to IForwarder.at(): undefined'
-            );
-        });
+    it('should verify EOA', async function () {
+      await expect(
+        contractInteractor.verifyForwarder(
+          fakeSuffixData,
+          fakeRelayRequest,
+          fakeSignature
+        )
+      ).to.eventually.be.undefined;
     });
+
+    // FIXME: all following tests seem to be integration tests as they expect some behaviour from dependencies.
+    it('should fail if EOA is not the owner', async function () {
+      const expectedErrorMsg =
+        'VM Exception while processing transaction: revert Not the owner of the SmartWallet'; // TODO: extract to error.constants.ts
+      fakeForwarder.verify = () => {
+        throw Error(expectedErrorMsg);
+      };
+
+      await expect(
+        contractInteractor.verifyForwarder(
+          fakeSuffixData,
+          fakeRelayRequest,
+          fakeSignature
+        )
+      ).to.have.eventually.rejectedWith(expectedErrorMsg);
+    });
+
+    it('should fail if nonce mismatch', async function () {
+      const expectedErrorMsg =
+        'VM Exception while processing transaction: revert nonce mismatch'; // TODO: extract to error.constants.ts
+      fakeForwarder.verify = () => {
+        throw Error(expectedErrorMsg);
+      };
+
+      await expect(
+        contractInteractor.verifyForwarder(
+          fakeSuffixData,
+          fakeRelayRequest,
+          fakeSignature
+        )
+      ).to.have.eventually.rejectedWith(expectedErrorMsg);
+    });
+
+    it('should fail if signature mismatch', async function () {
+      const expectedErrorMsg =
+        'VM Exception while processing transaction: revert Signature mismatch'; // TODO: extract to error.constants.ts
+      fakeForwarder.verify = () => {
+        throw Error(expectedErrorMsg);
+      };
+
+      await expect(
+        contractInteractor.verifyForwarder(
+          fakeSuffixData,
+          fakeRelayRequest,
+          fakeSignature
+        )
+      ).to.have.eventually.rejectedWith(expectedErrorMsg);
+    });
+
+    it('should fail if suffixData is undefined', async function () {
+      const expectedErrorMsg =
+        "Cannot read properties of undefined (reading 'substring')"; // TODO: extract to error.constants.ts
+      fakeForwarder.verify = () => {
+        throw Error(expectedErrorMsg);
+      };
+
+      await expect(
+        contractInteractor.verifyForwarder(
+          undefined as unknown as string,
+          fakeRelayRequest,
+          fakeSignature
+        )
+      ).to.have.eventually.rejectedWith(expectedErrorMsg);
+    });
+
+    it('should fail if RelayRequest is undefined', async function () {
+      await expect(
+        contractInteractor.verifyForwarder(
+          fakeSuffixData,
+          undefined as unknown as EnvelopingTypes.RelayRequestStruct,
+          fakeSignature
+        )
+      ).to.have.eventually.rejectedWith();
+    });
+
+    it('should fail if Signature is undefined', async function () {
+      const expectedErrorMsg =
+        "Cannot read properties of undefined (reading 'length')"; // TODO: extract to error.constants.ts
+      fakeForwarder.verify = () => {
+        throw Error(expectedErrorMsg);
+      };
+
+      await expect(
+        contractInteractor.verifyForwarder(
+          fakeSuffixData,
+          fakeRelayRequest,
+          undefined as unknown as string
+        )
+      ).to.have.eventually.rejectedWith(expectedErrorMsg);
+    });
+  });
 });

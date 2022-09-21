@@ -1,7 +1,7 @@
 import ow from 'ow';
 import type {
   EnvelopingTypes
-} from '@rsksmart/rif-relay-contracts/typechain-types/contracts/RelayHub';
+} from '@rsksmart/rif-relay-contracts/dist/typechain-types/contracts/RelayHub';
 
 
 export interface RelayMetadata {

@@ -1,5 +1,5 @@
-// import {IVersionRegistry} from '@rsksmart/rif-relay-contracts/typechain-types/contracts/interfaces';
-// import { VersionRegistry as VersionRegistryContract } from '@rsksmart/rif-relay-contracts/typechain-types'; '@rsksmart/rif-relay-contracts/typechain-types/contracts/utils/VersionRegistry'
+// import {IVersionRegistry} from '@rsksmart/rif-relay-contracts/dist/typechain-types/contracts/interfaces';
+// import { VersionRegistry as VersionRegistryContract } from '@rsksmart/rif-relay-contracts/dist/typechain-types'; '@rsksmart/rif-relay-contracts/dist/typechain-types/contracts/utils/VersionRegistry'
 // import { getContractAt } from '@nomiclabs/hardhat-ethers/internal/helpers';
 // import { contractFactory } from './factories/contractFactory';
 // import { ethers, getDefaultProvider } from 'ethers';

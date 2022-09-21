@@ -13,7 +13,6 @@ module.exports = {
     mocha: true,
     node: true,
   },
-  // root: true,
   plugins: ["@typescript-eslint", "mocha"],
   parser: "@typescript-eslint/parser",
   parserOptions: {
@@ -35,6 +34,7 @@ module.exports = {
         ignoreReadBeforeAssign: false,
       },
     ],
+    "@typescript-eslint/no-explicit-any": "error",
     "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
     "@typescript-eslint/naming-convention": [
       "error",

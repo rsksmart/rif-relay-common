@@ -5,7 +5,6 @@
     "outDir": "dist",
     "declaration": true,
     "baseUrl": "./",
-    "allowJs": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "exactOptionalPropertyTypes": false,
@@ -14,11 +13,6 @@
     "emitDecoratorMetadata": true,
     "extendedDiagnostics":true,
     "noErrorTruncation": true,
-    "types": [
-      "node",
-      "mocha",
-      "chai"
-    ],
     "sourceMap": true
   },
 }

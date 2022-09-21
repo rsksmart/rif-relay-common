@@ -1,32 +1,42 @@
-// @ts-nocheck
 import type {
-  IDeployVerifier,
-  IForwarder,
-  IRelayHub,
-  IRelayVerifier,
-  ITokenHandler,
-  IWalletFactory,
+  Block,
+  JsonRpcProvider,
+  TransactionResponse,
+} from '@ethersproject/providers';
+import type { Wallet } from '@ethersproject/wallet/src.ts';
+import {
+  DeployVerifier,
+  DeployVerifier__factory,
+  IForwarder__factory,
+  IRelayHub__factory,
+  IWalletFactory__factory,
   RelayHub,
+  RelayHub__factory,
+  RelayVerifier,
+  RelayVerifier__factory,
 } from '@rsksmart/rif-relay-contracts/dist/typechain-types';
-import type { EnvelopingTypes } from '@rsksmart/rif-relay-contracts/typechain-types/contracts/RelayHub';
+import type { TypedEvent } from '@rsksmart/rif-relay-contracts/dist/typechain-types/common';
+import type {
+  EnvelopingTypes,
+  IRelayHub,
+} from '@rsksmart/rif-relay-contracts/dist/typechain-types/contracts/RelayHub';
 import {
   BigNumber,
   BigNumberish,
-  Contract,
-  ethers,
-  getDefaultProvider,
-  Transaction,
-  TransactionReceipt,
+  constants,
+  ContractTransaction,
+  FixedNumber,
 } from 'ethers';
-import type { EnvelopingConfig } from 'types/EnvelopingConfig';
-import VersionsManager from './VersionsManager';
-import { BaseProvider } from '@ethersproject/providers/lib';
-import {
+import type { EnvelopingConfig } from '../types/EnvelopingConfig';
+import type {
   DeployTransactionRequest,
   RelayTransactionRequest,
 } from '../types/RelayTransactionRequest';
-import EnvelopingTransactionDetails from '../types/EnvelopingTransactionDetails';
-import type { Result } from 'ethers/lib/utils';
+import {
+  ESTIMATED_GAS_CORRECTION_FACTOR,
+  INTERNAL_TRANSACTION_ESTIMATE_CORRECTION,
+} from './constants';
+import VersionsManager from './VersionsManager';
 
 export interface EstimateGasParams {
   from: string;
@@ -35,148 +45,98 @@ export interface EstimateGasParams {
   gasPrice?: string;
 }
 
-export const RelayServerRegistered = 'RelayServerRegistered';
-export const RelayWorkersAdded = 'RelayWorkersAdded';
-export const TransactionRelayed = 'TransactionRelayed';
-export const TransactionRejectedByRecipient =
-  'TransactionRelayedButRevertedByRecipient';
+type ManagerEvent = keyof RelayHub['filters'];
+type DefaultManagerEvent = Extract<
+  ManagerEvent,
+  | 'RelayServerRegistered'
+  | 'RelayWorkersAdded'
+  | 'TransactionRelayed'
+  | 'TransactionRelayedButRevertedByRecipient'
+>;
 
-const ActiveManagerEvents = [
-  RelayServerRegistered,
-  RelayWorkersAdded,
-  TransactionRelayed,
-  TransactionRejectedByRecipient,
+const DEFAULT_MANAGER_EVENTS: DefaultManagerEvent[] = [
+  'RelayServerRegistered',
+  'RelayWorkersAdded',
+  'TransactionRelayed',
+  'TransactionRelayedButRevertedByRecipient',
 ];
 
-export const StakeAdded = 'StakeAdded';
-export const StakeUnlocked = 'StakeUnlocked';
-export const StakeWithdrawn = 'StakeWithdrawn';
-export const StakePenalized = 'StakePenalized';
 export default class ContractInteractor {
   private readonly VERSION = '2.0.1';
 
-  private readonly IRelayVerifierContract: Contract<IRelayVerifierInstance>;
-  private readonly IDeployVerifierContract: Contract<IDeployVerifierInstance>;
-  private readonly ITokenHandlerContract: Contract<ITokenHandlerInstance>;
+  private static instance: ContractInteractor;
 
-  private readonly IRelayHubContract: Contract<IRelayHubInstance>;
-  private readonly IForwarderContract: Contract<IForwarderInstance>;
-  private readonly IWalletFactoryContract: Contract<IWalletFactoryInstance>;
+  private _relayVerifier: RelayVerifier;
 
-  private relayVerifierInstance!: IRelayVerifierInstance;
-  private deployVerifierInstance!: IDeployVerifierInstance;
+  private _deployVerifier: DeployVerifier;
 
-  relayHubInstance!: RelayHub;
+  private _relayHub: RelayHub;
 
-  private readonly _provider: BaseProvider;
-  public get provider(): BaseProvider {
+  private readonly _provider: JsonRpcProvider;
+
+  public get provider(): JsonRpcProvider {
     return this._provider;
   }
 
+  private readonly _signer: Wallet;
+
+  public get signer(): Wallet {
+    return this._signer;
+  }
+
   private readonly _config: EnvelopingConfig;
+
   public get config(): EnvelopingConfig {
     return this._config;
   }
 
   private readonly _versionManager: VersionsManager;
+
   public get versionManager(): VersionsManager {
     return this._versionManager;
   }
 
-  private rawTxOptions?: ethers.Transaction;
-  chainId!: number;
-  private networkId?: number;
-  private networkType?: string;
-
-  constructor(provider: BaseProvider, config: EnvelopingConfig) {
-    this._versionManager = new VersionsManager(this.VERSION);
-    this.web3 = new Web3(provider);
-    this._config = config;
-    this._provider = provider;
-    this.chainId = config.chainId;
-    //
-    this.IRelayVerifierContract = TruffleContract({
-      contractName: 'IRelayVerifier',
-      abi: IRelayVerifier.abi,
-    });
-    //
-    this.IDeployVerifierContract = TruffleContract({
-      contractName: 'IDeployVerifier',
-      abi: IDeployVerifier.abi,
-    });
-    //
-    this.IRelayHubContract = TruffleContract({
-      contractName: 'IRelayHub',
-      abi: IRelayHub.abi,
-    });
-    //
-    this.IForwarderContract = TruffleContract({
-      contractName: 'IForwarder',
-      abi: IForwarder.abi,
-    });
-    //
-    this.IWalletFactoryContract = TruffleContract({
-      contractName: 'IWalletFactory',
-      abi: IWalletFactory.abi,
-    });
-    //
-    this.ITokenHandlerContract = TruffleContract({
-      contractName: 'ITokenHandler',
-      abi: ITokenHandler.abi,
-    });
-    this.IRelayHubContract.setProvider(this.provider, undefined);
-    this.IRelayVerifierContract.setProvider(this.provider, undefined);
-    this.IDeployVerifierContract.setProvider(this.provider, undefined);
-    this.IForwarderContract.setProvider(this.provider, undefined);
-    this.IWalletFactoryContract.setProvider(this.provider, undefined);
-    this.ITokenHandlerContract.setProvider(this.provider, undefined);
-  }
-
-  async init(): Promise<void> {
-    log.debug('Contract Interactor - Initializing');
-    if (this.isInitialized()) {
-      throw new Error('_init has already called');
-    }
-    await this._initializeContracts();
-    log.debug('Contract Interactor - Initialized succesfully');
-    await this._validateCompatibility().catch((err) =>
-      log.warn('WARNING: beta ignore version compatibility', err.message)
-    );
-
-    this.chainId = await this.web3.eth.getChainId();
-    this.networkId = await this.web3.eth.net.getId();
-    await this._setNetworkType();
-    log.debug(
-      `Contract Interactor - Using chainId: ${this.chainId}, networkId:${this.networkId} , networkType:${this.networkType} `
-    );
-    // chain === 'private' means we're on ganache, and ethereumjs-tx.Transaction doesn't support that chain type
-    this.rawTxOptions = getRawTxOptions(
-      this.chainId,
-      this.networkId,
-      this.networkType
-    );
-  }
-
-  isInitialized(): boolean {
-    return this.rawTxOptions != null;
-  }
-
-  async _setNetworkType(): Promise<void> {
-    try {
-      this.networkType = await this.web3.eth.net.getNetworkType();
-    } catch (e) {
-      log.warn(
-        'WARNING: Could not retrieve the network type, used default value private'
+  public static async getInstance(
+    provider: JsonRpcProvider,
+    signer: Wallet,
+    config: EnvelopingConfig
+  ): Promise<ContractInteractor> {
+    if (!ContractInteractor.instance) {
+      ContractInteractor.instance = new ContractInteractor(
+        provider,
+        signer,
+        config
       );
-      this.networkType = 'private';
+      const version = await ContractInteractor.instance._relayHub.versionHub();
+      ContractInteractor.instance._validateVersion(version);
     }
+
+    return ContractInteractor.instance;
   }
 
-  async getAsyncChainId(): Promise<number> {
-    return await this.web3.eth.getChainId();
-  }
+  private constructor(
+    provider: JsonRpcProvider,
+    signer: Wallet,
+    config: EnvelopingConfig
+  ) {
+    const { relayHubAddress, relayVerifierAddress, deployVerifierAddress } =
+      config;
 
-  async _validateCompatibility(): Promise<void> {}
+    this._versionManager = new VersionsManager(this.VERSION);
+    this._config = config;
+    this._signer = signer;
+    this._provider = provider;
+
+    this._relayHub = RelayHub__factory.connect(relayHubAddress, signer);
+    this._relayVerifier = RelayVerifier__factory.connect(
+      relayVerifierAddress,
+      signer
+    );
+    this._deployVerifier = DeployVerifier__factory.connect(
+      deployVerifierAddress,
+      signer
+    );
+  }
 
   _validateVersion(version: string): void {
     const isNewer = this.versionManager.isMinorSameOrNewer(version);
@@ -187,80 +147,23 @@ export default class ContractInteractor {
     }
   }
 
-  async _initializeContracts(): Promise<void> {
-    if (this.config.relayHubAddress !== ethers.constants.AddressZero) {
-      this.relayHubInstance = await this._createRelayHub(
-        this.config.relayHubAddress
-      );
-      log.debug(
-        `Contract Interactor - Relay Hub initialized: ${this.relayHubInstance.address}`
-      );
-    }
-    if (this.config.relayVerifierAddress !== ethers.constants.AddressZero) {
-      this.relayVerifierInstance = await this._createRelayVerifier(
-        this.config.relayVerifierAddress
-      );
-      log.debug(
-        `Contract Interactor - Relay Verifier initialized: ${this.relayVerifierInstance.address}`
-      );
-    }
-    if (this.config.deployVerifierAddress !== ethers.constants.AddressZero) {
-      this.deployVerifierInstance = await this._createDeployVerifier(
-        this.config.deployVerifierAddress
-      );
-      log.debug(
-        `Contract Interactor - Deploy Verifier initialized: ${this.deployVerifierInstance.address}`
-      );
-    }
-    log.info('Contracts initialized correctly');
-  }
-
-  // must use these options when creating Transaction object
-  getRawTxOptions(): Transaction {
-    if (this.rawTxOptions == null) {
-      throw new Error('_init not called');
-    }
-    return this.rawTxOptions;
-  }
-
-  async _createRelayVerifier(address: string): Promise<IRelayVerifier> {
-    return await this.IRelayVerifierContract.at(address);
-  }
-
-  async _createDeployVerifier(address: string): Promise<IDeployVerifier> {
-    return await this.IDeployVerifierContract.at(address);
-  }
-
-  async createTokenHandler(address: string): Promise<ITokenHandler> {
-    return await this.ITokenHandlerContract.at(address);
-  }
-
-  async _createRelayHub(address: string): Promise<IRelayHub> {
-    return await this.IRelayHubContract.at(address);
-  }
-
-  async _createForwarder(address: string): Promise<IForwarder> {
-    return await this.IForwarderContract.at(address);
-  }
-
-  async _createFactory(address: string): Promise<IWalletFactory> {
-    return await this.IWalletFactoryContract.at(address);
-  }
-
   async getSenderNonce(sWallet: string): Promise<string> {
-    const forwarder = await this._createForwarder(sWallet);
-    const nonce = await forwarder.nonce();
+    const forwarder = IForwarder__factory.connect(sWallet, this.signer);
+    const nonce: BigNumber = await forwarder.nonce();
+
     return nonce.toString();
   }
 
   async getFactoryNonce(factoryAddr: string, from: string): Promise<string> {
-    const factory = await this._createFactory(factoryAddr);
-    const nonce = await factory.nonce(from);
+    const factory = IForwarder__factory.connect(factoryAddr, this.signer);
+    const nonce: BigNumber = await factory.connect(from).nonce();
+
     return nonce.toString();
   }
 
-  async _getBlockGasLimit(): Promise<number> {
-    const latestBlock = await this.web3.eth.getBlock('latest');
+  async _getBlockGasLimit(): Promise<BigNumber> {
+    const latestBlock = await this.provider.getBlock('latest');
+
     return latestBlock.gasLimit;
   }
 
@@ -273,50 +176,50 @@ export default class ContractInteractor {
     reverted: boolean;
     revertedInDestination: boolean;
   }> {
-    const relayHub = this.relayHubInstance;
-    const externalGasLimit: number = await this.getMaxViewableRelayGasLimit(
-      relayRequest,
-      signature
+    const relayHub = this._relayHub;
+    const externalGasLimit: BigNumber = BigNumber.from(
+      await this.getMaxViewableRelayGasLimit(relayRequest, signature)
     );
-    if (externalGasLimit === 0) {
+    const relayWorker = this.provider.getSigner(
+      relayRequest.relayData.relayWorker as string
+    );
+    if (externalGasLimit.eq(0)) {
       // The relayWorker does not have enough balance for this transaction
       return {
         verifierAccepted: false,
         reverted: false,
-        returnValue: `relayWorker ${relayRequest.relayData.relayWorker} does not have enough balance to cover the maximum possible gas for this transaction`,
+        returnValue: `relayWorker ${
+          relayRequest.relayData.relayWorker as string
+        } does not have enough balance to cover the maximum possible gas for this transaction`,
         revertedInDestination: false,
       };
     }
 
     // First call the verifier
     try {
-      await this.relayVerifierInstance.contract.methods
-        .verifyRelayedCall(relayRequest, signature)
-        .call(
-          {
-            from: relayRequest.relayData.relayWorker,
-          },
-          'pending'
-        );
-    } catch (e) {
-      const message =
-        e instanceof Error ? e.message : JSON.stringify(e, replaceErrors);
+      await this._relayVerifier
+        .connect(relayWorker)
+        .verifyRelayedCall(relayRequest, signature, {
+          // defaultBlock: 'pending' // FIXME: suppose to be set to pending (not sure why tho?), but ethers has no such overriode
+        });
+    } catch ({ message }) {
       return {
         verifierAccepted: false,
         reverted: false,
-        returnValue: `view call to 'relayCall' reverted in verifier: ${message}`,
+        returnValue: `view call to 'relayCall' reverted in verifier: ${
+          message as string
+        }`,
         revertedInDestination: false,
       };
     }
 
     // If the verified passed, try relaying the transaction (in local view call)
     try {
-      const res = await relayHub.contract.methods
-        .relayCall(relayRequest, signature)
-        .call({
-          from: relayRequest.relayData.relayWorker,
+      const res = await relayHub
+        .connect(relayWorker)
+        .relayCall(relayRequest, signature, {
           gasPrice: relayRequest.relayData.gasPrice,
-          gas: toHex(externalGasLimit),
+          gasLimit: externalGasLimit,
         });
 
       // res is destinationCallSuccess
@@ -324,15 +227,15 @@ export default class ContractInteractor {
         verifierAccepted: true,
         reverted: false,
         returnValue: '',
-        revertedInDestination: !(res as boolean),
+        revertedInDestination: !res,
       };
-    } catch (e) {
-      const message =
-        e instanceof Error ? e.message : JSON.stringify(e, replaceErrors);
+    } catch ({ message }) {
       return {
         verifierAccepted: true,
         reverted: true,
-        returnValue: `view call to 'relayCall' reverted in client: ${message}`,
+        returnValue: `view call to 'relayCall' reverted in client: ${
+          message as string
+        }`,
         revertedInDestination: false,
       };
     }
@@ -343,57 +246,65 @@ export default class ContractInteractor {
     returnValue: string;
     reverted: boolean;
   }> {
-    const relayHub = this.relayHubInstance;
-    const externalGasLimit = await this.getMaxViewableDeployGasLimit(request);
+    const relayHub = this._relayHub;
+    const externalGasLimit = BigNumber.from(
+      await this.getMaxViewableDeployGasLimit(request)
+    );
 
-    if (externalGasLimit.eq(toBN(0))) {
+    const {
+      relayRequest,
+      metadata: { signature },
+    } = request;
+    const { relayData } = relayRequest;
+    const relayWorker = this.provider.getSigner(
+      relayData.relayWorker as string
+    );
+
+    if (externalGasLimit.eq(0)) {
       // The relayWorker does not have enough balance for this transaction
       return {
         verifierAccepted: false,
         reverted: false,
-        returnValue: `relayWorker ${request.relayRequest.relayData.relayWorker} does not have enough balance to cover the maximum possible gas for this transaction`,
+        returnValue: `relayWorker ${relayWorker._address} does not have enough balance to cover the maximum possible gas for this transaction`,
       };
     }
 
     // First call the verifier
     try {
-      await this.deployVerifierInstance.contract.methods
-        .verifyRelayedCall(request.relayRequest, request.metadata.signature)
-        .call({
-          from: request.relayRequest.relayData.relayWorker,
-        });
-    } catch (e) {
-      const message =
-        e instanceof Error ? e.message : JSON.stringify(e, replaceErrors);
+      await this._deployVerifier
+        .connect(relayWorker)
+        .verifyRelayedCall(relayRequest, signature);
+    } catch ({ message }) {
       return {
         verifierAccepted: false,
         reverted: false,
-        returnValue: `view call to 'deploy call' reverted in verifier: ${message}`,
+        returnValue: `view call to 'deploy call' reverted in verifier: ${
+          message as string
+        }`,
       };
     }
 
     // If the verified passed, try relaying the transaction (in local view call)
     try {
-      const res = await relayHub.contract.methods
-        .deployCall(request.relayRequest, request.metadata.signature)
-        .call({
-          from: request.relayRequest.relayData.relayWorker,
-          gasPrice: request.relayRequest.relayData.gasPrice,
-          gas: externalGasLimit,
+      const res = await relayHub
+        .connect(relayWorker)
+        .deployCall(relayRequest, signature, {
+          gasPrice: relayData.gasPrice,
+          gasLimit: externalGasLimit,
         });
 
       return {
         verifierAccepted: true,
         reverted: false,
-        returnValue: res.returnValue,
+        returnValue: res.hash, //res.returnValue was the original value, but I have no idea what it is meant to be? the deployCall method does not return anything.
       };
-    } catch (e) {
-      const message =
-        e instanceof Error ? e.message : JSON.stringify(e, replaceErrors);
+    } catch ({ message }) {
       return {
         verifierAccepted: true,
         reverted: true,
-        returnValue: `view call to 'deployCall' reverted in client: ${message}`,
+        returnValue: `view call to 'deployCall' reverted in client: ${
+          message as string
+        }`,
       };
     }
   }
@@ -401,89 +312,91 @@ export default class ContractInteractor {
   async getMaxViewableDeployGasLimit(
     request: DeployTransactionRequest
   ): Promise<BigNumberish> {
-    const gasPrice = BigNumber.from(request.relayRequest.relayData.gasPrice);
-    let gasLimit = BigNumber.from(0);
+    const { relayRequest } = request;
+    const {
+      relayData: { gasPrice, relayWorker },
+    } = relayRequest;
 
-    // if (!gasPrice.eq(BigNumber.from(0))) {  question: erm...why? It is always going to be true as set jsut above.
-    const maxEstimatedGas = BigNumber.from(
-      await this.walletFactoryEstimateGasOfDeployCall(request)
-    );
-    const workerBalanceAsUnitsOfGas = BigNumber.from(
-      await this.getBalance(request.relayRequest.relayData.relayWorker)
-    ).div(gasPrice);
-
-    if (workerBalanceAsUnitsOfGas.gte(maxEstimatedGas)) {
-      gasLimit = maxEstimatedGas;
+    if (BigNumber.from(gasPrice).eq(0)) {
+      return 0;
     }
-    // }
 
-    return gasLimit;
+    const maxEstimatedGas = await this.walletFactoryEstimateGasOfDeployCall(
+      request
+    );
+    const workerBalanceAsUnitsOfGas = (
+      await this.getBalance(relayWorker as string)
+    ).div(BigNumber.from(gasPrice));
+
+    return workerBalanceAsUnitsOfGas.gte(maxEstimatedGas) ? maxEstimatedGas : 0;
   }
 
   async estimateRelayTransactionMaxPossibleGas(
     relayRequest: EnvelopingTypes.RelayRequestStruct,
     signature: string
-  ): Promise<number> {
-    const maxPossibleGas = await this.estimateGas({
+  ): Promise<BigNumber> {
+    const encodedTargetCall = this._relayHub.interface.encodeFunctionData(
+      'relayCall',
+      [relayRequest, signature]
+    );
+    const maxPossibleGas = await this.provider.estimateGas({
       from: relayRequest.relayData.relayWorker,
       to: relayRequest.request.relayHub,
-      data: this.relayHubInstance.contract.methods
-        .relayCall(relayRequest, signature)
-        .encodeABI(),
+      data: encodedTargetCall,
       gasPrice: relayRequest.relayData.gasPrice,
     });
 
     // TODO RIF Team: Once the exactimator is available on the RSK node, then ESTIMATED_GAS_CORRECTION_FACTOR can be removed (in our tests it is 1.0 anyway, so it's not active)
-    return Math.ceil(
-      maxPossibleGas * constants.ESTIMATED_GAS_CORRECTION_FACTOR
+    return BigNumber.from(
+      FixedNumber.from(
+        maxPossibleGas.mul(ESTIMATED_GAS_CORRECTION_FACTOR)
+      ).ceiling()
     );
   }
 
-  async estimateRelayTransactionMaxPossibleGasWithTransactionRequest(
-    request: RelayTransactionRequest
-  ): Promise<number> {
-    if (
-      request.metadata.relayHubAddress === undefined ||
-      request.metadata.relayHubAddress === null ||
-      request.metadata.relayHubAddress === constants.ZERO_ADDRESS
-    ) {
+  async estimateRelayTransactionMaxPossibleGasWithTransactionRequest({
+    metadata: { relayHubAddress, signature },
+    relayRequest,
+  }: RelayTransactionRequest): Promise<BigNumber> {
+    if (!relayHubAddress || relayHubAddress === constants.AddressZero) {
       throw new Error('calculateDeployCallGas: RelayHub must be defined');
     }
-
-    const rHub = await this._createRelayHub(request.metadata.relayHubAddress);
-    const method = rHub.contract.methods.relayCall(
-      request.relayRequest,
-      request.metadata.signature
-    );
-
-    const maxPossibleGas = await method.estimateGas({
-      from: request.relayRequest.relayData.relayWorker,
-      gasPrice: request.relayRequest.relayData.gasPrice,
-    });
+    const {
+      relayData: { relayWorker, gasPrice },
+    } = relayRequest;
+    const rHub = IRelayHub__factory.connect(relayHubAddress, this.signer);
+    const maxPossibleGas = await rHub
+      .connect(relayWorker as string)
+      .estimateGas.relayCall(relayRequest, signature, {
+        gasPrice: gasPrice,
+      });
 
     // TODO RIF Team: Once the exactimator is available on the RSK node, then ESTIMATED_GAS_CORRECTION_FACTOR can be removed (in our tests it is 1.0 anyway, so it's not active)
-    return Math.ceil(
-      maxPossibleGas * constants.ESTIMATED_GAS_CORRECTION_FACTOR
+    return BigNumber.from(
+      FixedNumber.from(
+        maxPossibleGas.mul(ESTIMATED_GAS_CORRECTION_FACTOR)
+      ).ceiling()
     );
   }
 
   async estimateDestinationContractCallGas(
     transactionDetails: EstimateGasParams,
     addCushion = true
-  ): Promise<number> {
+  ): Promise<BigNumber> {
     // For relay calls, transactionDetails.gas is only the portion of gas sent to the destination contract, the tokenPayment
     // Part is done before, by the SmartWallet
 
-    const estimated = await this.estimateGas({
+    const estimated = await this.provider.estimateGas({
       from: transactionDetails.from,
       to: transactionDetails.to,
-      gasPrice: transactionDetails.gasPrice,
+      gasPrice: transactionDetails.gasPrice as string,
       data: transactionDetails.data,
     });
-    let internalCallCost =
-      estimated > constants.INTERNAL_TRANSACTION_ESTIMATE_CORRECTION
-        ? estimated - constants.INTERNAL_TRANSACTION_ESTIMATE_CORRECTION
-        : estimated;
+    let internalCallCost = estimated.gt(
+      INTERNAL_TRANSACTION_ESTIMATE_CORRECTION
+    )
+      ? estimated.sub(INTERNAL_TRANSACTION_ESTIMATE_CORRECTION)
+      : estimated;
 
     // The INTERNAL_TRANSACTION_ESTIMATE_CORRECTION is substracted because the estimation is done using web3.eth.estimateGas which
     // estimates the call as if it where an external call, and in our case it will be called internally (it's not the same cost).
@@ -492,8 +405,7 @@ export default class ContractInteractor {
     // require(gasleft() > req.gas, "Not enough gas left"). This is done right before calling the destination internally
 
     if (addCushion) {
-      internalCallCost =
-        internalCallCost * constants.ESTIMATED_GAS_CORRECTION_FACTOR;
+      internalCallCost = internalCallCost.mul(ESTIMATED_GAS_CORRECTION_FACTOR);
     }
 
     return internalCallCost;
@@ -502,52 +414,52 @@ export default class ContractInteractor {
   async getMaxViewableRelayGasLimit(
     relayRequest: EnvelopingTypes.RelayRequestStruct,
     signature: string
-  ): Promise<number> {
-    const gasPrice = toBN(relayRequest.relayData.gasPrice);
-    let gasLimit = 0;
+  ): Promise<BigNumberish> {
+    const {
+      relayData: { gasPrice, relayWorker },
+    } = relayRequest;
 
-    if (gasPrice.gt(toBN(0))) {
-      const maxEstimatedGas: number =
-        await this.estimateRelayTransactionMaxPossibleGas(
-          relayRequest,
-          signature
-        );
-      const workerBalanceAsUnitsOfGas = toBN(
-        await this.getBalance(relayRequest.relayData.relayWorker)
-      ).div(gasPrice);
-
-      if (workerBalanceAsUnitsOfGas.gte(toBN(maxEstimatedGas))) {
-        gasLimit = maxEstimatedGas;
-      }
+    if (!BigNumber.from(gasPrice).eq(0)) {
+      0;
     }
 
-    return gasLimit;
+    const maxEstimatedGas: BigNumber =
+      await this.estimateRelayTransactionMaxPossibleGas(
+        relayRequest,
+        signature
+      );
+    const workerBalanceAsUnitsOfGas = (
+      await this.getBalance(relayWorker as string)
+    ).div(gasPrice as BigNumberish);
+
+    return workerBalanceAsUnitsOfGas.gte(maxEstimatedGas) ? maxEstimatedGas : 0;
   }
 
   encodeRelayCallABI(
     relayRequest: EnvelopingTypes.RelayRequestStruct,
     sig: string
   ): string {
-    // TODO: check this works as expected
-    //
-    const relayHub = new this.IRelayHubContract('');
-    return relayHub.contract.methods.relayCall(relayRequest, sig).encodeABI();
+    return this._relayHub.interface.encodeFunctionData('relayCall', [
+      relayRequest,
+      sig,
+    ]);
   }
 
   encodeDeployCallABI(
     relayRequest: EnvelopingTypes.DeployRequestStruct,
     sig: string
   ): string {
-    // TODO: check this works as expected
-    //
-    const relayHub = new this.IRelayHubContract('');
-    return relayHub.contract.methods.deployCall(relayRequest, sig).encodeABI();
+    return this._relayHub.interface.encodeFunctionData('deployCall', [
+      relayRequest,
+      sig,
+    ]);
   }
 
   async getActiveRelayInfo(
     relayManagers: Set<string>
-  ): Promise<EnvelopingTypes.RelayManagerData[]> {
+  ): Promise<IRelayHub.RelayManagerDataStruct[]> {
     const results = await this.getRelayInfo(relayManagers);
+
     return results.filter(
       (relayData) => relayData.registered && relayData.currentlyStaked
     );
@@ -555,85 +467,41 @@ export default class ContractInteractor {
 
   async getRelayInfo(
     relayManagers: Set<string>
-  ): Promise<EnvelopingTypes.RelayManagerData[]> {
+  ): Promise<IRelayHub.RelayManagerDataStruct[]> {
     const managers: string[] = Array.from(relayManagers);
-    const contractCalls: Array<Promise<EnvelopingTypes.RelayManagerData>> =
+    const contractCalls: Array<Promise<IRelayHub.RelayManagerDataStruct>> =
       managers.map((managerAddress) =>
-        this.relayHubInstance.getRelayInfo(managerAddress)
+        this._relayHub.getRelayInfo(managerAddress)
       );
+
     return await Promise.all(contractCalls);
   }
 
   async getPastEventsForHub(
-    extraTopics: string[],
-    options: {}, // PastEventOptions
-    names: string[] = ActiveManagerEvents
-  ): Promise<Result> {
-    return await this._getPastEvents(
-      this.relayHubInstance.contract,
-      names,
-      extraTopics,
-      options
-    );
-  }
+    { fromBlock, toBlock }: { fromBlock?: number; toBlock?: number }, // PastEventOptions
+    names: ManagerEvent[] = DEFAULT_MANAGER_EVENTS
+  ): Promise<Array<Array<TypedEvent>>> {
+    const eventFilters = await Promise.all(
+      names.map((name) => {
+        const filter = this._relayHub.filters[name];
+        const definedFilter = filter as Omit<typeof filter, 'undefined'>;
 
-  async getPastEventsForStakeManagement(
-    names: string[],
-    extraTopics: string[],
-    options: {} // PastEventOptions
-  ): Promise<Result> {
-    const relayHub = this.relayHubInstance;
-    return await this._getPastEvents(
-      relayHub.contract,
-      names,
-      extraTopics,
-      options
+        return this._relayHub.queryFilter(definedFilter, fromBlock, toBlock);
+      })
     );
-  }
 
-  async _getPastEvents(
-    contract: Contract,
-    names: string[],
-    extraTopics: string[],
-    options: {} // PastEventOptions
-  ): Promise<Result> {
-    const topics: string[][] = [];
-    const eventTopic = event2topic(contract, names);
-    topics.push(eventTopic);
-    if (extraTopics.length > 0) {
-      topics.push(extraTopics);
-    }
-    return contract.getPastEvents(
-      'allEvents',
-      Object.assign({}, options, { topics })
-    );
+    return eventFilters;
   }
 
   async getBalance(
     address: string,
-    defaultBlock: number = 'latest'
-  ): Promise<string> {
-    return await this.web3.eth.getBalance(address, defaultBlock);
+    atBlock: number | 'latest' | 'pending' | 'earliest' = 'latest'
+  ): Promise<BigNumber> {
+    return await this.provider.getBalance(address, atBlock);
   }
 
   async getBlockNumber(): Promise<number> {
-    return await this.web3.eth.getBlockNumber();
-  }
-
-  async sendSignedTransaction(rawTx: string): Promise<TransactionReceipt> {
-    // noinspection ES6RedundantAwait - PromiEvent makes lint less happy about this line
-    return await this.web3.eth.sendSignedTransaction(rawTx);
-  }
-
-  async estimateGas(
-    transactionDetails: EnvelopingTransactionDetails
-  ): Promise<number> {
-    return await this.web3.eth.estimateGas(transactionDetails);
-  }
-
-  // TODO: cache response for some time to optimize. It doesn't make sense to optimize these requests in calling code.
-  async getGasPrice(): Promise<string> {
-    return await this.web3.eth.getGasPrice();
+    return await this.provider.getBlockNumber();
   }
 
   async getTransactionCount(
@@ -641,210 +509,110 @@ export default class ContractInteractor {
     defaultBlock?: number
   ): Promise<number> {
     //  (web3 does not define 'defaultBlock' as optional)
-    return await this.web3.eth.getTransactionCount(address, defaultBlock);
+    return await this.provider.getTransactionCount(address, defaultBlock);
   }
 
-  async getTransaction(transactionHash: string): Promise<Transaction> {
-    return await this.web3.eth.getTransaction(transactionHash);
+  async getTransaction(transactionHash: string): Promise<TransactionResponse> {
+    return await this.provider.getTransaction(transactionHash);
   }
 
-  async getBlock(blockHashOrBlockNumber: number): Promise<string> {
-    return await this.web3.eth.getBlock(blockHashOrBlockNumber);
-  }
-
-  validateAddress(address: string, exceptionTitle = 'invalid address:'): void {
-    if (!this.web3.utils.isAddress(address)) {
-      throw new Error(exceptionTitle + ' ' + address);
-    }
-  }
-
-  async getCode(address: string): Promise<string> {
-    return await this.web3.eth.getCode(address);
-  }
-
-  getChainId(): number {
-    if (this.chainId == null) {
-      throw new Error('_init not called');
-    }
-    return this.chainId;
-  }
-
-  getNetworkId(): number {
-    if (this.networkId == null) {
-      throw new Error('_init not called');
-    }
-    return this.networkId;
-  }
-
-  getNetworkType(): string {
-    if (this.networkType == null) {
-      throw new Error('_init not called');
-    }
-    return this.networkType;
+  async getBlock(blockHashOrBlockNumber: number): Promise<Block> {
+    return await this.provider.getBlock(blockHashOrBlockNumber);
   }
 
   async isContractDeployed(address: string): Promise<boolean> {
-    const code = await this.getCode(address);
+    const code = await this.provider.getCode(address);
+
     // Check added for RSKJ: when the contract does not exist in RSKJ it replies to the getCode call with 0x00
     return code !== '0x' && code !== '0x00';
   }
 
-  async getStakeInfo(managerAddress: string): Promise<{
-    stake: string;
-    unstakeDelay: string;
-    withdrawBlock: string;
-    owner: string;
-  }> {
-    return await this.relayHubInstance.getStakeInfo(managerAddress);
+  async getStakeInfo(
+    managerAddress: string
+  ): ReturnType<RelayHub['getStakeInfo']> {
+    return await this._relayHub.getStakeInfo(managerAddress);
   }
 
   async walletFactoryDeployEstimateGasForInternalCall(
-    request: EnvelopingTypes.DeployRequestStruct,
+    { request, relayData }: EnvelopingTypes.DeployRequestStruct,
     factory: string,
     suffixData: string,
     signature: string,
     testCall = false
-  ): Promise<number> {
-    const pFactory = await this._createFactory(factory);
-
-    const method = pFactory.contract.methods.relayedUserSmartWalletCreation(
-      request.request,
-      suffixData,
-      signature
-    );
-
+  ): Promise<BigNumber | void> {
+    const pFactory = IWalletFactory__factory.connect(factory, this.signer);
     if (testCall) {
-      await method.call({ from: request.request.relayHub });
-    }
-
-    return method.estimateGas({
-      from: request.request.relayHub,
-      gasPrice: request.relayData.gasPrice,
-    });
-  }
-
-  async walletFactoryEstimateGasOfDeployCall(
-    request: DeployTransactionRequest
-  ): Promise<number> {
-    if (
-      request.metadata.relayHubAddress === undefined ||
-      request.metadata.relayHubAddress === null ||
-      request.metadata.relayHubAddress === constants.ZERO_ADDRESS
-    ) {
-      throw new Error('calculateDeployCallGas: RelayHub must be defined');
-    }
-    const rHub = await this._createRelayHub(request.metadata.relayHubAddress);
-    const method = rHub.contract.methods.deployCall(
-      request.relayRequest,
-      request.metadata.signature
-    );
-
-    return method.estimateGas({
-      from: request.relayRequest.relayData.relayWorker,
-      gasPrice: request.relayRequest.relayData.gasPrice,
-    });
-  }
-
-  // TODO: a way to make a relay hub transaction with a specified nonce without exposing the 'method' abstraction
-  async getRegisterRelayMethod(url: string): Promise<any> {
-    const hub = this.relayHubInstance;
-    return hub.contract.methods.registerRelayServer(url);
-  }
-
-  async getAddRelayWorkersMethod(workers: string[]): Promise<any> {
-    const hub = this.relayHubInstance;
-    return hub.contract.methods.addRelayWorkers(workers);
-  }
-
-  /**
-   * Web3.js as of 1.2.6 (see web3-core-method::_confirmTransaction) does not allow
-   * broadcasting of a transaction without waiting for it to be mined.
-   * This method sends the RPC call directly
-   * @param signedTransaction - the raw signed transaction to broadcast
-   */
-  async broadcastTransaction(signedTransaction: string): Promise<string> {
-    return await new Promise((resolve, reject) => {
-      if (this.provider == null) {
-        throw new Error('provider is not set');
-      }
-      this.provider.send(
-        {
-          jsonrpc: '2.0',
-          method: 'eth_sendRawTransaction',
-          params: [signedTransaction],
-          id: Date.now(),
-        },
-        (e: Error | null, r: any) => {
-          if (e != null) {
-            reject(e);
-          } else if (r.error != null) {
-            reject(r.error);
-          } else {
-            resolve(r.result);
+      // FIXME: violates first SOLID principle
+      await pFactory
+        .connect(request.relayHub as string)
+        .callStatic.relayedUserSmartWalletCreation(
+          request,
+          suffixData,
+          signature,
+          {
+            gasPrice: relayData.gasPrice,
           }
+        );
+    }
+
+    return pFactory
+      .connect(request.relayHub as string)
+      .estimateGas.relayedUserSmartWalletCreation(
+        request,
+        suffixData,
+        signature,
+        {
+          gasPrice: relayData.gasPrice,
         }
       );
-    });
   }
 
-  async getTransactionReceipt(
-    transactionHash: string,
-    retries: number = constants.WAIT_FOR_RECEIPT_RETRIES,
-    initialBackoff: number = constants.WAIT_FOR_RECEIPT_INITIAL_BACKOFF
-  ): Promise<TransactionReceipt> {
-    for (
-      let tryCount = 0, backoff = initialBackoff;
-      tryCount < retries;
-      tryCount++, backoff *= 2
-    ) {
-      const receipt = await this.web3.eth.getTransactionReceipt(
-        transactionHash
-      );
-      // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-      if (receipt) {
-        return receipt;
-      }
-      await sleep(backoff);
+  async walletFactoryEstimateGasOfDeployCall({
+    relayRequest,
+    metadata: { relayHubAddress, signature },
+  }: DeployTransactionRequest): Promise<BigNumber> {
+    if (!relayHubAddress || relayHubAddress === constants.AddressZero) {
+      throw new Error('calculateDeployCallGas: RelayHub must be defined');
     }
-    throw new Error(`No receipt found for this transaction ${transactionHash}`);
+    const rHub = IRelayHub__factory.connect(relayHubAddress, this.signer);
+
+    const {
+      relayData: { relayWorker, gasPrice },
+    } = relayRequest;
+
+    return rHub
+      .connect(relayWorker as string)
+      .estimateGas.deployCall(relayRequest, signature, { gasPrice });
+  }
+
+  async getRegisterRelayMethod(url: string): Promise<ContractTransaction> {
+    return this._relayHub.registerRelayServer(url);
+  }
+
+  async getAddRelayWorkersMethod(
+    workers: string[]
+  ): Promise<ContractTransaction> {
+    return this._relayHub.addRelayWorkers(workers);
+  }
+
+  async broadcastTransaction(
+    signedTransaction: string
+  ): Promise<TransactionResponse> {
+    return this.provider.sendTransaction(signedTransaction);
   }
 
   async verifyForwarder(
     suffixData: string,
-    request: EnvelopingTypes.RelayRequestStruct,
+    {
+      request,
+      relayData: { callForwarder },
+    }: EnvelopingTypes.RelayRequestStruct,
     signature: string
   ): Promise<void> {
-    const forwarder = await this._createForwarder(
-      request.relayData.callForwarder
+    const forwarder = IForwarder__factory.connect(
+      callForwarder as string,
+      this.signer
     );
-    await forwarder.verify(suffixData, request.request, signature);
+    await forwarder.verify(suffixData, request, signature);
   }
-}
-
-/**
- * Ganache does not seem to enforce EIP-155 signature. Buidler does, though.
- * This is how {@link Transaction} constructor allows support for custom and private network.
- * @param chainId
- * @param networkId
- * @param chain
- * @return {{common: Common}}
- */
-export function getRawTxOptions(
-  chainId: number,
-  networkId: number,
-  chain?: string
-): Transaction {
-  if (chain == null || chain === 'main' || chain === 'private') {
-    chain = 'mainnet';
-  }
-  return {
-    common: Common.forCustomChain(
-      chain,
-      {
-        chainId,
-        networkId,
-      },
-      'istanbul'
-    ),
-  };
 }
