@@ -318,6 +318,7 @@ export default class ContractInteractor {
     async validateAcceptRelayCall(
         relayRequest: RelayRequest,
         signature: PrefixedHexString,
+        feesReceiver: string,
         relayWorker: string
     ): Promise<{
         verifierAccepted: boolean;
@@ -329,6 +330,7 @@ export default class ContractInteractor {
         const externalGasLimit: number = await this.getMaxViewableRelayGasLimit(
             relayRequest,
             signature,
+            feesReceiver,
             relayWorker
         );
         if (externalGasLimit === 0) {
@@ -367,7 +369,7 @@ export default class ContractInteractor {
         // If the verified passed, try relaying the transaction (in local view call)
         try {
             const res = await relayHub.contract.methods
-                .relayCall(relayRequest, signature)
+                .relayCall(relayRequest, feesReceiver, signature)
                 .call({
                     from: relayWorker,
                     gasPrice: relayRequest.relayData.gasPrice,
@@ -397,6 +399,7 @@ export default class ContractInteractor {
 
     async validateAcceptDeployCall(
         request: DeployTransactionRequest,
+        feesReceiver: string,
         relayWorker: string
     ): Promise<{
         verifierAccepted: boolean;
@@ -406,6 +409,7 @@ export default class ContractInteractor {
         const relayHub = this.relayHubInstance;
         const externalGasLimit = await this.getMaxViewableDeployGasLimit(
             request,
+            feesReceiver,
             relayWorker
         );
 
@@ -443,7 +447,11 @@ export default class ContractInteractor {
         // If the verified passed, try relaying the transaction (in local view call)
         try {
             const res = await relayHub.contract.methods
-                .deployCall(request.relayRequest, request.metadata.signature)
+                .deployCall(
+                    request.relayRequest,
+                    feesReceiver,
+                    request.metadata.signature
+                )
                 .call({
                     from: relayWorker,
                     gasPrice: request.relayRequest.relayData.gasPrice,
@@ -470,6 +478,7 @@ export default class ContractInteractor {
 
     async getMaxViewableDeployGasLimit(
         request: DeployTransactionRequest,
+        feesReceiver: string,
         relayWorker: string
     ): Promise<BN> {
         const gasPrice = toBN(request.relayRequest.relayData.gasPrice);
@@ -479,6 +488,7 @@ export default class ContractInteractor {
             const maxEstimatedGas = toBN(
                 await this.walletFactoryEstimateGasOfDeployCall(
                     request,
+                    feesReceiver,
                     relayWorker
                 )
             );
@@ -497,13 +507,14 @@ export default class ContractInteractor {
     async estimateRelayTransactionMaxPossibleGas(
         relayRequest: RelayRequest,
         signature: PrefixedHexString,
+        feesReceiver: string,
         relayWorker: string
     ): Promise<number> {
         const maxPossibleGas = await this.estimateGas({
             from: relayWorker,
             to: relayRequest.request.relayHub,
             data: this.relayHubInstance.contract.methods
-                .relayCall(relayRequest, signature)
+                .relayCall(relayRequest, feesReceiver, signature)
                 .encodeABI(),
             gasPrice: relayRequest.relayData.gasPrice
         });
@@ -516,6 +527,7 @@ export default class ContractInteractor {
 
     async estimateRelayTransactionMaxPossibleGasWithTransactionRequest(
         request: RelayTransactionRequest,
+        feesReceiver: string,
         relayWorker: string
     ): Promise<number> {
         if (
@@ -531,6 +543,7 @@ export default class ContractInteractor {
         );
         const method = rHub.contract.methods.relayCall(
             request.relayRequest,
+            feesReceiver,
             request.metadata.signature
         );
 
@@ -580,6 +593,7 @@ export default class ContractInteractor {
     async getMaxViewableRelayGasLimit(
         relayRequest: RelayRequest,
         signature: PrefixedHexString,
+        feesReceiver: string,
         relayWorker: string
     ): Promise<number> {
         const gasPrice = toBN(relayRequest.relayData.gasPrice);
@@ -590,6 +604,7 @@ export default class ContractInteractor {
                 await this.estimateRelayTransactionMaxPossibleGas(
                     relayRequest,
                     signature,
+                    feesReceiver,
                     relayWorker
                 );
             const workerBalanceAsUnitsOfGas = toBN(
@@ -606,25 +621,27 @@ export default class ContractInteractor {
 
     encodeRelayCallABI(
         relayRequest: RelayRequest,
+        feesReceiver: string,
         sig: PrefixedHexString
     ): PrefixedHexString {
         // TODO: check this works as expected
         // @ts-ignore
         const relayHub = new this.IRelayHubContract('');
         return relayHub.contract.methods
-            .relayCall(relayRequest, sig)
+            .relayCall(relayRequest, feesReceiver, sig)
             .encodeABI();
     }
 
     encodeDeployCallABI(
         relayRequest: DeployRequest,
+        feesReceiver: string,
         sig: PrefixedHexString
     ): PrefixedHexString {
         // TODO: check this works as expected
         // @ts-ignore
         const relayHub = new this.IRelayHubContract('');
         return relayHub.contract.methods
-            .deployCall(relayRequest, sig)
+            .deployCall(relayRequest, feesReceiver, sig)
             .encodeABI();
     }
 
@@ -815,6 +832,7 @@ export default class ContractInteractor {
 
     async walletFactoryEstimateGasOfDeployCall(
         request: DeployTransactionRequest,
+        feesReceiver: string,
         relayWorker: string
     ): Promise<number> {
         if (
@@ -829,6 +847,7 @@ export default class ContractInteractor {
         );
         const method = rHub.contract.methods.deployCall(
             request.relayRequest,
+            feesReceiver,
             request.metadata.signature
         );
 

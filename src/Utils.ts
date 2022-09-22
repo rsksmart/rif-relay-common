@@ -269,7 +269,8 @@ function isDeployRequest(req: any): boolean {
 }
 
 export function transactionParamDataCost(
-    req: RelayTransactionRequest | DeployTransactionRequest
+    req: RelayTransactionRequest | DeployTransactionRequest,
+    feesReceiver: string
 ): number {
     // @ts-ignore
     const IRelayHubContract = TruffleContract({
@@ -284,10 +285,12 @@ export function transactionParamDataCost(
     const method = isDeploy
         ? relayHub.contract.methods.deployCall(
               req.relayRequest as DeployRequest,
+              feesReceiver,
               req.metadata.signature
           )
         : relayHub.contract.methods.relayCall(
               req.relayRequest as RelayRequest,
+              feesReceiver,
               req.metadata.signature
           );
 
