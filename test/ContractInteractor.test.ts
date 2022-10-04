@@ -1,4 +1,5 @@
 import { JsonRpcProvider } from '@ethersproject/providers/lib';
+import type { JsonRpcSigner } from '@ethersproject/providers/src.ts/json-rpc-provider';
 import {
   IForwarder,
   IForwarder__factory,
@@ -10,7 +11,7 @@ import type {
 } from '@rsksmart/rif-relay-contracts/dist/typechain-types/contracts/RelayHub';
 import { expect, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import { constants, ethers, Wallet } from 'ethers';
+import { constants, ethers } from 'ethers';
 import { createSandbox, SinonStubbedInstance } from 'sinon';
 import sinonChai from 'sinon-chai';
 import ContractInteractor from '../src/ContractInteractor';
@@ -53,11 +54,19 @@ describe('ContractInteractor', function () {
   };
   let fakeProvider: SinonStubbedInstance<JsonRpcProvider>;
   let contractInteractor: ContractInteractor;
-  let owner: Wallet;
 
   beforeEach(async function () {
-    owner = ethers.Wallet.createRandom();
-    fakeProvider = sandbox.createStubInstance(JsonRpcProvider);
+    const fakeSigner = ethers.Wallet.createRandom() as unknown as JsonRpcSigner;
+
+    fakeProvider = sandbox.createStubInstance(JsonRpcProvider, {
+      getSigner: sandbox
+        .stub<[string | number | undefined], JsonRpcSigner>()
+        .callsFake(() => fakeSigner),
+    });
+    // FIXME: somehow make it run without ignoring ts rules (ie without changing readonly _isProvider)
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    fakeProvider._isProvider = true;
 
     sandbox
       .stub(VersionsManager.prototype, 'isMinorSameOrNewer')
@@ -74,7 +83,6 @@ describe('ContractInteractor', function () {
 
     contractInteractor = await ContractInteractor.getInstance(
       fakeProvider,
-      owner,
       defaultConfig
     );
   });

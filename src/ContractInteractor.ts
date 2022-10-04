@@ -3,7 +3,6 @@ import type {
   JsonRpcProvider,
   TransactionResponse,
 } from '@ethersproject/providers';
-import type { Wallet } from '@ethersproject/wallet/src.ts';
 import {
   DeployVerifier,
   DeployVerifier__factory,
@@ -78,12 +77,6 @@ export default class ContractInteractor {
     return this._provider;
   }
 
-  private readonly _signer: Wallet;
-
-  public get signer(): Wallet {
-    return this._signer;
-  }
-
   private readonly _config: EnvelopingConfig;
 
   public get config(): EnvelopingConfig {
@@ -98,15 +91,10 @@ export default class ContractInteractor {
 
   public static async getInstance(
     provider: JsonRpcProvider,
-    signer: Wallet,
     config: EnvelopingConfig
   ): Promise<ContractInteractor> {
     if (!ContractInteractor.instance) {
-      ContractInteractor.instance = new ContractInteractor(
-        provider,
-        signer,
-        config
-      );
+      ContractInteractor.instance = new ContractInteractor(provider, config);
       const version = await ContractInteractor.instance._relayHub.versionHub();
       ContractInteractor.instance._validateVersion(version);
     }
@@ -114,27 +102,22 @@ export default class ContractInteractor {
     return ContractInteractor.instance;
   }
 
-  private constructor(
-    provider: JsonRpcProvider,
-    signer: Wallet,
-    config: EnvelopingConfig
-  ) {
+  private constructor(provider: JsonRpcProvider, config: EnvelopingConfig) {
     const { relayHubAddress, relayVerifierAddress, deployVerifierAddress } =
       config;
 
     this._versionManager = new VersionsManager(this.VERSION);
     this._config = config;
-    this._signer = signer;
     this._provider = provider;
 
-    this._relayHub = RelayHub__factory.connect(relayHubAddress, signer);
+    this._relayHub = RelayHub__factory.connect(relayHubAddress, provider);
     this._relayVerifier = RelayVerifier__factory.connect(
       relayVerifierAddress,
-      signer
+      provider
     );
     this._deployVerifier = DeployVerifier__factory.connect(
       deployVerifierAddress,
-      signer
+      provider
     );
   }
 
@@ -148,14 +131,14 @@ export default class ContractInteractor {
   }
 
   async getSenderNonce(sWallet: string): Promise<string> {
-    const forwarder = IForwarder__factory.connect(sWallet, this.signer);
+    const forwarder = IForwarder__factory.connect(sWallet, this._provider);
     const nonce: BigNumber = await forwarder.nonce();
 
     return nonce.toString();
   }
 
   async getFactoryNonce(factoryAddr: string, from: string): Promise<string> {
-    const factory = IForwarder__factory.connect(factoryAddr, this.signer);
+    const factory = IForwarder__factory.connect(factoryAddr, this._provider);
     const nonce: BigNumber = await factory.connect(from).nonce();
 
     return nonce.toString();
@@ -364,7 +347,7 @@ export default class ContractInteractor {
     const {
       relayData: { relayWorker, gasPrice },
     } = relayRequest;
-    const rHub = IRelayHub__factory.connect(relayHubAddress, this.signer);
+    const rHub = IRelayHub__factory.connect(relayHubAddress, this._provider);
     const maxPossibleGas = await rHub
       .connect(relayWorker as string)
       .estimateGas.relayCall(relayRequest, signature, {
@@ -540,7 +523,7 @@ export default class ContractInteractor {
     signature: string,
     testCall = false
   ): Promise<BigNumber | void> {
-    const pFactory = IWalletFactory__factory.connect(factory, this.signer);
+    const pFactory = IWalletFactory__factory.connect(factory, this.provider);
     if (testCall) {
       // FIXME: violates first SOLID principle
       await pFactory
@@ -574,7 +557,7 @@ export default class ContractInteractor {
     if (!relayHubAddress || relayHubAddress === constants.AddressZero) {
       throw new Error('calculateDeployCallGas: RelayHub must be defined');
     }
-    const rHub = IRelayHub__factory.connect(relayHubAddress, this.signer);
+    const rHub = IRelayHub__factory.connect(relayHubAddress, this.provider);
 
     const {
       relayData: { relayWorker, gasPrice },
@@ -611,7 +594,7 @@ export default class ContractInteractor {
   ): Promise<void> {
     const forwarder = IForwarder__factory.connect(
       callForwarder as string,
-      this.signer
+      this.provider
     );
     await forwarder.verify(suffixData, request, signature);
   }
