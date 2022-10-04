@@ -1,52 +1,30 @@
-// accessor class for the on-chain version registry
+import {
+    IVersionRegistry,
+    VersionRegistry__factory
+} from '@rsksmart/rif-relay-contracts/dist/typechain-types';
+import { Signer, ethers } from 'ethers';
 import { PrefixedHexString } from 'ethereumjs-tx';
 import { bufferToHex } from 'ethereumjs-util';
-import { Contract } from 'web3-eth-contract';
-import { IVersionRegistry } from '@rsksmart/rif-relay-contracts';
-import Web3 from 'web3';
-
-export function string32(s: string): PrefixedHexString {
-    return bufferToHex(Buffer.from(s)).padEnd(66, '0');
-}
-
-// convert a bytes32 into a string, removing any trailing zeros
-export function bytes32toString(s: PrefixedHexString): string {
-    return Buffer.from(
-        s.replace(/^(?:0x)?(.*?)(00)*$/, '$1'),
-        'hex'
-    ).toString();
-}
-
-export interface VersionInfo {
-    value: string;
-    version: string;
-    time: number;
-    canceled: boolean;
-    cancelReason: string;
-}
 
 export class VersionRegistry {
-    registryContract: Contract;
-    web3: Web3;
+    private readonly _addr: string;
+    private readonly _signer: Signer;
 
-    constructor(
-        web3provider: any,
-        registryAddress: PrefixedHexString,
-        readonly sendOptions = {}
-    ) {
-        this.web3 = new Web3(web3provider);
-        this.registryContract = new this.web3.eth.Contract(
-            IVersionRegistry.abi as any,
-            registryAddress
-        );
+    constructor(signer: Signer, registryAddr: string) {
+        this._addr = registryAddr;
+        this._signer = signer;
+    }
+
+    connect(): IVersionRegistry {
+        return VersionRegistry__factory.connect(this._addr, this._signer);
     }
 
     async isValid(): Promise<boolean> {
         // validate the contract exists, and has the registry API
         // Check added for RSKJ: when the contract does not exist in RSKJ it replies to the getCode call with 0x00
-        const code = await this.web3.eth.getCode(
-            this.registryContract.options.address
-        );
+        const code = await ethers
+            .getDefaultProvider()
+            .getCode(this.connect().address);
         if (code === '0x' || code === '0x00') {
             return false;
         }
@@ -72,38 +50,49 @@ export class VersionRegistry {
         id: string,
         delayPeriod: number,
         optInVersion = ''
-    ): Promise<VersionInfo> {
+    ): Promise<any> {
         const [versions, now] = await Promise.all([
             this.getAllVersions(id),
-            this.web3.eth.getBlock('latest').then((b) => b.timestamp as number)
+            ethers
+                .getDefaultProvider()
+                .getBlock('latest')
+                .then((block) => block.timestamp as number)
         ]);
 
-        const ver = versions.find(
-            (v) =>
-                !v.canceled &&
-                (v.time + delayPeriod <= now || v.version === optInVersion)
+        const version = versions.find(
+            (single_version: {
+                canceled: boolean;
+                time: number;
+                version: string;
+            }) =>
+                !single_version.canceled &&
+                (single_version.time + delayPeriod <= now ||
+                    single_version.version === optInVersion)
         );
-        if (ver == null) {
+        if (version == null) {
             throw new Error(`getVersion(${id}) - no version found`);
         }
 
-        return ver;
+        return version;
     }
 
     /**
      * return all version history of the given id
      * @param id object id to return version history for
      */
-    async getAllVersions(id: string): Promise<VersionInfo[]> {
-        const events = await this.registryContract.getPastEvents('allEvents', {
+    async getAllVersions(id: string): Promise<any[]> {
+        const events = await this.connect().getPastEvents('allEvents', {
             fromBlock: 1,
             topics: [null, string32(id)]
         });
         // map of ver=>reason, for every canceled version
         const cancelReasons: { [key: string]: string } = events
-            .filter((e) => e.event === 'VersionCanceled')
+            .filter((e: { event: string }) => e.event === 'VersionCanceled')
             .reduce(
-                (set, e) => ({
+                (
+                    set: any,
+                    e: { returnValues: { version: any; reason: any } }
+                ) => ({
                     ...set,
                     [e.returnValues.version]: e.returnValues.reason
                 }),
@@ -112,15 +101,23 @@ export class VersionRegistry {
 
         const found = new Set<string>();
         return events
-            .filter((e) => e.event === 'VersionAdded')
-            .map((e) => ({
-                version: bytes32toString(e.returnValues.version),
-                canceled: cancelReasons[e.returnValues.version] != null,
-                cancelReason: cancelReasons[e.returnValues.version],
-                value: e.returnValues.value,
-                time: parseInt(e.returnValues.time)
-            }))
-            .filter((e) => {
+            .filter((e: { event: string }) => e.event === 'VersionAdded')
+            .map(
+                (e: {
+                    returnValues: {
+                        version: string | number;
+                        value: any;
+                        time: string;
+                    };
+                }) => ({
+                    version: bytes32toString(e.returnValues.version.toString()),
+                    canceled: cancelReasons[e.returnValues.version] != null,
+                    cancelReason: cancelReasons[e.returnValues.version],
+                    value: e.returnValues.value,
+                    time: parseInt(e.returnValues.time)
+                })
+            )
+            .filter((e: { version: string }) => {
                 // use only the first occurrence of each version
                 if (found.has(e.version)) {
                     return false;
@@ -134,12 +131,13 @@ export class VersionRegistry {
 
     // return all IDs registered
     async listIds(): Promise<string[]> {
-        const events = await this.registryContract.getPastEvents(
-            'VersionAdded',
-            { fromBlock: 1 }
-        );
-        const ids = new Set(
-            events.map((e) => bytes32toString(e.returnValues.id))
+        const events = await this.connect().getPastEvents('VersionAdded', {
+            fromBlock: 1
+        });
+        const ids: Set<string> = new Set(
+            events.map((event: { returnValues: { id: string } }) =>
+                bytes32toString(event.returnValues.id)
+            )
         );
         return Array.from(ids);
     }
@@ -151,9 +149,8 @@ export class VersionRegistry {
         sendOptions = {}
     ): Promise<void> {
         await this.checkVersion(id, version, false);
-        await this.registryContract.methods
-            .addVersion(string32(id), string32(version), value)
-            .send({ ...this.sendOptions, ...sendOptions });
+        await this.connect().addVersion(string32(id), string32(version), value);
+        // .send({ ...this.sendOptions, ...sendOptions });
     }
 
     async cancelVersion(
@@ -163,9 +160,12 @@ export class VersionRegistry {
         sendOptions = {}
     ): Promise<void> {
         await this.checkVersion(id, version, true);
-        await this.registryContract.methods
-            .cancelVersion(string32(id), string32(version), cancelReason)
-            .send({ ...this.sendOptions, ...sendOptions });
+        await this.connect().cancelVersion(
+            string32(id),
+            string32(version),
+            cancelReason
+        );
+        // .send({ ...this.sendOptions, ...sendOptions });
     }
 
     private async checkVersion(
@@ -185,4 +185,16 @@ export class VersionRegistry {
             );
         }
     }
+}
+
+export function string32(s: string): PrefixedHexString {
+    return bufferToHex(Buffer.from(s)).padEnd(66, '0');
+}
+
+// convert a bytes32 into a string, removing any trailing zeros
+export function bytes32toString(s: string): string {
+    return Buffer.from(
+        s.replace(/^(?:0x)?(.*?)(00)*$/, '$1'),
+        'hex'
+    ).toString();
 }
