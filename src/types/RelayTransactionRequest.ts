@@ -34,7 +34,7 @@ export const DeployTransactionRequestShape = {
         },
         relayData: {
             gasPrice: ow.string,
-            relayWorker: ow.string,
+            feesReceiver: ow.string,
             callForwarder: ow.string,
             callVerifier: ow.string
         }
@@ -62,7 +62,7 @@ export const RelayTransactionRequestShape = {
         },
         relayData: {
             gasPrice: ow.string,
-            relayWorker: ow.string,
+            feesReceiver: ow.string,
             callForwarder: ow.string,
             callVerifier: ow.string
         }

@@ -1,14 +1,20 @@
 import sinon, { stubInterface } from 'ts-sinon';
+import { SinonStub, stub } from 'sinon';
 import { expect, use, assert } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import { IForwarderInstance } from '@rsksmart/rif-relay-contracts/types/truffle-contracts';
+import BN from 'bn.js';
+import {
+    IForwarderInstance,
+    ERC20Instance
+} from '@rsksmart/rif-relay-contracts/types/truffle-contracts';
 import {
     constants,
     ContractInteractor,
     EnvelopingConfig,
     Web3Provider
 } from '../src';
+import { Token } from '../src/types/token.type';
 import {
     ForwardRequest,
     RelayData,
@@ -48,6 +54,7 @@ describe('ContractInteractor', () => {
     };
     let mockWeb3Provider: Web3Provider;
     let contractInteractor: ContractInteractor;
+    const address = 'address';
 
     before(() => {
         mockWeb3Provider = stubInterface<Web3Provider>();
@@ -193,6 +200,75 @@ describe('ContractInteractor', () => {
                     fakeSignature
                 ),
                 'Invalid address passed to IForwarder.at(): null'
+            );
+        });
+    });
+
+    describe('getERC20Token', () => {
+        const testToken: Token = {
+            name: 'Test Token',
+            decimals: 18,
+            symbol: 'TKN',
+            contractAddress: address
+        };
+
+        it('should return testToken', async () => {
+            const fakeERC20Instance = stubInterface<ERC20Instance>({
+                name: Promise.resolve(testToken.name),
+                symbol: Promise.resolve(testToken.symbol as string),
+                decimals: Promise.resolve(new BN(testToken.decimals as number))
+            });
+            stub(contractInteractor, '_createERC20')
+                .withArgs(address)
+                .returns(Promise.resolve(fakeERC20Instance));
+
+            const token = await contractInteractor.getERC20Token(address, {
+                symbol: true,
+                decimals: true
+            });
+            assert.equal(token.name, testToken.name, 'Token name mismatch');
+            assert.equal(
+                token.decimals,
+                testToken.decimals,
+                'Token decimals mismatch'
+            );
+            assert.equal(
+                token.symbol,
+                testToken.symbol,
+                'Token symbol mismatch'
+            );
+            (contractInteractor._createERC20 as SinonStub).restore();
+        });
+
+        it('should return token with specified properties', async () => {
+            const fakeERC20Instance = stubInterface<ERC20Instance>({
+                name: Promise.resolve(testToken.name),
+                symbol: Promise.resolve(testToken.symbol as string),
+                decimals: Promise.resolve(new BN(testToken.decimals as number))
+            });
+            stub(contractInteractor, '_createERC20')
+                .withArgs(address)
+                .returns(Promise.resolve(fakeERC20Instance));
+
+            const token = await contractInteractor.getERC20Token(address);
+            assert.equal(token.name, testToken.name, 'Token name mismatch');
+            assert.equal(
+                token.decimals,
+                undefined,
+                'Token decimals should be undefined'
+            );
+            assert.equal(
+                token.symbol,
+                undefined,
+                'Token symbol should be undefined'
+            );
+            (contractInteractor._createERC20 as SinonStub).restore();
+        });
+
+        it('should fail if address is null', async () => {
+            await assert.isRejected(
+                contractInteractor.getERC20Token(null),
+                'Invalid address passed to ERC20.at(): null'
             );
         });
     });
