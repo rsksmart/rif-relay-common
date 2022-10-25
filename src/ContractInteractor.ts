@@ -23,7 +23,8 @@ import {
     RelayManagerData,
     DeployRequest,
     RelayRequest,
-    ERC20
+    ERC20,
+    ISmartWalletFactory
 } from '@rsksmart/rif-relay-contracts';
 import {
     IForwarderInstance,
@@ -32,7 +33,8 @@ import {
     IDeployVerifierInstance,
     IWalletFactoryInstance,
     ITokenHandlerInstance,
-    ERC20Instance
+    ERC20Instance,
+    ISmartWalletFactoryInstance
 } from '@rsksmart/rif-relay-contracts/types/truffle-contracts';
 import { toBN, toHex } from 'web3-utils';
 import BN from 'bn.js';
@@ -47,7 +49,7 @@ import VersionsManager from './VersionsManager';
 import { EnvelopingConfig } from './types/EnvelopingConfig';
 import EnvelopingTransactionDetails from './types/EnvelopingTransactionDetails';
 import { constants } from './Constants';
-import { Token, TokenOptions } from './types/token.type';
+import { ERC20Options, ERC20Token } from './types/token.type';
 
 // Truffle Contract typings seem to be completely out of their minds
 import TruffleContract = require('@truffle/contract');
@@ -98,11 +100,12 @@ export default class ContractInteractor {
     private readonly IForwarderContract: Contract<IForwarderInstance>;
     private readonly IWalletFactoryContract: Contract<IWalletFactoryInstance>;
     private readonly ERC20Contract: Contract<ERC20Instance>;
+    private readonly ISmartWalletFactory: Contract<ISmartWalletFactoryInstance>;
 
     private relayVerifierInstance!: IRelayVerifierInstance;
     private deployVerifierInstance!: IDeployVerifierInstance;
 
-    relayHubInstance!: IRelayHubInstance;
+    relayHubInstance: IRelayHubInstance;
 
     readonly web3: Web3;
     private readonly provider: Web3Provider;
@@ -155,6 +158,11 @@ export default class ContractInteractor {
             contractName: 'ERC20',
             abi: ERC20.abi
         });
+        // @ts-ignore
+        this.ISmartWalletFactory = TruffleContract({
+            contractName: 'ISmartWalletFactory',
+            abi: ISmartWalletFactory.abi
+        });
         this.IRelayHubContract.setProvider(this.provider, undefined);
         this.IRelayVerifierContract.setProvider(this.provider, undefined);
         this.IDeployVerifierContract.setProvider(this.provider, undefined);
@@ -162,6 +170,7 @@ export default class ContractInteractor {
         this.IWalletFactoryContract.setProvider(this.provider, undefined);
         this.ITokenHandlerContract.setProvider(this.provider, undefined);
         this.ERC20Contract.setProvider(this.provider, undefined);
+        this.ISmartWalletFactory.setProvider(this.provider, undefined);
     }
 
     getProvider(): provider {
@@ -296,6 +305,22 @@ export default class ContractInteractor {
 
     async _createFactory(address: string): Promise<IWalletFactoryInstance> {
         return await this.IWalletFactoryContract.at(address);
+    }
+
+    async _createSmartWalletFactory(
+        address: string
+    ): Promise<ISmartWalletFactoryInstance> {
+        return await this.ISmartWalletFactory.at(address);
+    }
+
+    async getSmartWalletAddress(
+        address: string,
+        owner: string,
+        recoverer: string,
+        index: string
+    ) {
+        const factory = await this._createSmartWalletFactory(address);
+        return await factory.getSmartWalletAddress(owner, recoverer, index);
     }
 
     async getSenderNonce(sWallet: string): Promise<string> {
@@ -540,6 +565,7 @@ export default class ContractInteractor {
         });
 
         // TODO RIF Team: Once the exactimator is available on the RSK node, then ESTIMATED_GAS_CORRECTION_FACTOR can be removed (in our tests it is 1.0 anyway, so it's not active)
+        //FIXME check why two times its being multiply by ESTIMATED_GAS_CORRECTION_FACTOR
         return Math.ceil(
             maxPossibleGas * constants.ESTIMATED_GAS_CORRECTION_FACTOR
         );
@@ -919,20 +945,25 @@ export default class ContractInteractor {
 
     async getERC20Token(
         address: string,
-        options?: TokenOptions
-    ): Promise<Token> {
-        const token = await this._createERC20(address);
+        options?: Partial<ERC20Options>
+    ): Promise<ERC20Token> {
+        const instance = await this._createERC20(address);
+        if (!options || Object.values(options).every((x) => x === false)) {
+            return { instance };
+        }
         const [name, decimals, symbol] = await Promise.all([
-            await token.name(),
-            options?.decimals ? (await token.decimals()).toNumber() : undefined,
-            options?.symbol ? await token.symbol() : undefined
+            options.name ? await instance.name() : undefined,
+            options.decimals
+                ? (await instance.decimals()).toNumber()
+                : undefined,
+            options.symbol ? await instance.symbol() : undefined
         ]);
 
         return {
+            instance,
             name,
             decimals,
-            symbol,
-            contractAddress: address
+            symbol
         };
     }
 }
