@@ -32,11 +32,11 @@ import type {
   ManagerEvent,
   PastEventOptions,
 } from 'types/ContractInteractor.types';
-import type { EnvelopingConfig } from '../types/EnvelopingConfig';
+import type { EnvelopingConfig } from 'types/EnvelopingConfig';
 import type {
   DeployTransactionRequest,
   RelayTransactionRequest,
-} from '../types/RelayTransactionRequest';
+} from 'types/RelayTransactionRequest';
 import {
   ESTIMATED_GAS_CORRECTION_FACTOR,
   INTERNAL_TRANSACTION_ESTIMATE_CORRECTION,
