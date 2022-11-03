@@ -10,8 +10,6 @@ export type ERC20Token = Partial<TokenAttributes> & {
     instance: ERC20Instance;
 };
 
-type OptionsFlags<Type> = {
-    [Property in keyof Type]: boolean;
-};
+type TokenAttributePropertyName = keyof TokenAttributes;
 
-export type ERC20Options = Partial<OptionsFlags<TokenAttributes>>;
+export type ERC20Options = Partial<Record<TokenAttributePropertyName, boolean>>;

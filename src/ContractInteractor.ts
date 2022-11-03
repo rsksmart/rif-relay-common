@@ -565,7 +565,6 @@ export default class ContractInteractor {
         });
 
         // TODO RIF Team: Once the exactimator is available on the RSK node, then ESTIMATED_GAS_CORRECTION_FACTOR can be removed (in our tests it is 1.0 anyway, so it's not active)
-        //FIXME check why two times its being multiply by ESTIMATED_GAS_CORRECTION_FACTOR
         return Math.ceil(
             maxPossibleGas * constants.ESTIMATED_GAS_CORRECTION_FACTOR
         );
@@ -818,14 +817,15 @@ export default class ContractInteractor {
         request: DeployRequest,
         factory: string,
         suffixData: string,
+        feesReceiver: string,
         signature: string,
         testCall = false
     ): Promise<number> {
         const pFactory = await this._createFactory(factory);
-
         const method = pFactory.contract.methods.relayedUserSmartWalletCreation(
             request.request,
             suffixData,
+            feesReceiver,
             signature
         );
 
@@ -945,7 +945,7 @@ export default class ContractInteractor {
 
     async getERC20Token(
         address: string,
-        options?: Partial<ERC20Options>
+        options?: ERC20Options
     ): Promise<ERC20Token> {
         const instance = await this._createERC20(address);
         if (!options || Object.values(options).every((x) => x === false)) {
