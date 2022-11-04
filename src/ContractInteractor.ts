@@ -949,11 +949,11 @@ export default class ContractInteractor {
     ): Promise<ERC20Token> {
         const instance = await this._createERC20(address);
         const [name, decimals, symbol] = await Promise.all([
-            options.name ? await instance.name() : undefined,
-            options.decimals
+            options?.name ? await instance.name() : undefined,
+            options?.decimals
                 ? (await instance.decimals()).toNumber()
                 : undefined,
-            options.symbol ? await instance.symbol() : undefined
+            options?.symbol ? await instance.symbol() : undefined
         ]);
 
         return {
