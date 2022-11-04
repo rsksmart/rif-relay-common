@@ -948,9 +948,6 @@ export default class ContractInteractor {
         options?: ERC20Options
     ): Promise<ERC20Token> {
         const instance = await this._createERC20(address);
-        if (!options || Object.values(options).every((x) => x === false)) {
-            return { instance };
-        }
         const [name, decimals, symbol] = await Promise.all([
             options.name ? await instance.name() : undefined,
             options.decimals
