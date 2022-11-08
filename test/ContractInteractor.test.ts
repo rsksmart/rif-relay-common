@@ -1,12 +1,12 @@
 import sinon, { stubInterface } from 'ts-sinon';
-import { SinonStub, stub } from 'sinon';
-import { expect, use, assert } from 'chai';
+import { expect, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import BN from 'bn.js';
 import {
     IForwarderInstance,
-    ERC20Instance
+    ERC20Instance,
+    ISmartWalletFactoryInstance
 } from '@rsksmart/rif-relay-contracts/types/truffle-contracts';
 import {
     constants,
@@ -14,7 +14,6 @@ import {
     EnvelopingConfig,
     Web3Provider
 } from '../src';
-import { Token } from '../src/types/token.type';
 import {
     ForwardRequest,
     RelayData,
@@ -65,7 +64,6 @@ describe('ContractInteractor', () => {
     });
 
     describe('verifyForwarder', () => {
-        let _createForwarderStub: sinon.SinonStub;
         let fakeIForwarderInstance: sinon.SinonStubbedInstance<IForwarderInstance> &
             IForwarderInstance;
         const fakeSuffixData = 'fakeSuffix';
@@ -82,11 +80,15 @@ describe('ContractInteractor', () => {
         };
         const fakeSignature = 'fake_signature';
 
-        before(() => {
+        beforeEach(function () {
             fakeIForwarderInstance = stubInterface<IForwarderInstance>();
-            _createForwarderStub = sinon
+            sinon
                 .stub(contractInteractor, '_createForwarder')
                 .callsFake(() => Promise.resolve(fakeIForwarderInstance));
+        });
+
+        afterEach(function () {
+            sinon.restore();
         });
 
         it('should verify EOA and call once _createForwarder', async () => {
@@ -105,14 +107,13 @@ describe('ContractInteractor', () => {
                 'VM Exception while processing transaction: revert Not the owner of the SmartWallet'
             );
             fakeIForwarderInstance.verify.throwsException(error);
-            await assert.isRejected(
+            await expect(
                 contractInteractor.verifyForwarder(
                     fakeSuffixData,
                     fakeRelayRequest,
                     fakeSignature
-                ),
-                error.message
-            );
+                )
+            ).to.be.rejectedWith(error.message);
         });
 
         it('should fail if nonce mismatch', async () => {
@@ -120,14 +121,13 @@ describe('ContractInteractor', () => {
                 'VM Exception while processing transaction: revert nonce mismatch'
             );
             fakeIForwarderInstance.verify.throwsException(error);
-            await assert.isRejected(
+            await expect(
                 contractInteractor.verifyForwarder(
                     fakeSuffixData,
                     fakeRelayRequest,
                     fakeSignature
-                ),
-                error.message
-            );
+                )
+            ).to.be.rejectedWith(error.message);
         });
 
         it('should fail if signature mismatch', async () => {
@@ -135,140 +135,109 @@ describe('ContractInteractor', () => {
                 'VM Exception while processing transaction: revert Signature mismatch'
             );
             fakeIForwarderInstance.verify.throwsException(error);
-            await assert.isRejected(
+            await expect(
                 contractInteractor.verifyForwarder(
                     fakeSuffixData,
                     fakeRelayRequest,
                     fakeSignature
-                ),
-                error.message
+                )
+            ).to.be.rejectedWith(error.message);
+        });
+    });
+
+    describe('getSmartWalletAddress', function () {
+        let smartWalletFactory: ISmartWalletFactoryInstance;
+        const owner = '0x2';
+        const recoverer = constants.ZERO_ADDRESS;
+        const index = '1';
+        const smartWalletAddress = '0x1';
+
+        beforeEach(function () {
+            smartWalletFactory = stubInterface<ISmartWalletFactoryInstance>({
+                getSmartWalletAddress: Promise.resolve(smartWalletAddress)
+            });
+        });
+
+        afterEach(function () {
+            sinon.restore();
+        });
+
+        it('should return smart wallet address', async function () {
+            sinon
+                .stub(contractInteractor, '_createSmartWalletFactory')
+                .withArgs(address)
+                .returns(Promise.resolve(smartWalletFactory));
+            const expectedSmartWalletAddress =
+                await contractInteractor.getSmartWalletAddress(
+                    address,
+                    owner,
+                    recoverer,
+                    index
+                );
+            expect(expectedSmartWalletAddress).to.be.equal(
+                smartWalletAddress,
+                `${expectedSmartWalletAddress} should equal ${smartWalletAddress}`
             );
         });
 
-        it('should fail if suffixData is null', async () => {
-            const error = new TypeError(
-                "Cannot read properties of null (reading 'substring')"
-            );
-            fakeIForwarderInstance.verify.throwsException(error);
-            await assert.isRejected(
-                contractInteractor.verifyForwarder(
-                    null,
-                    fakeRelayRequest,
-                    fakeSignature
-                ),
-                error.message
-            );
-        });
-
-        it('should fail if RelayRequest is null', async () => {
-            const error = new TypeError(
-                "Cannot read properties of null (reading 'relayData')"
-            );
-            fakeIForwarderInstance.verify.throwsException(error);
-            await assert.isRejected(
-                contractInteractor.verifyForwarder(
-                    fakeSuffixData,
-                    null,
-                    fakeSignature
-                ),
-                error.message
-            );
-        });
-
-        it('should fail if Signature is null', async () => {
-            const error = new TypeError(
-                "Cannot read properties of null (reading 'length')"
-            );
-            fakeIForwarderInstance.verify.throwsException(error);
-            await assert.isRejected(
-                contractInteractor.verifyForwarder(
-                    fakeSuffixData,
-                    fakeRelayRequest,
-                    null
-                ),
-                error.message
-            );
-        });
-
-        it('should fail if callForwarder is null', async () => {
-            _createForwarderStub.restore();
-            fakeRelayRequest.relayData.callForwarder = null;
-            await assert.isRejected(
-                contractInteractor.verifyForwarder(
-                    fakeSuffixData,
-                    fakeRelayRequest,
-                    fakeSignature
-                ),
-                'Invalid address passed to IForwarder.at(): null'
+        it('should fail if factory does not exists', async function () {
+            await expect(
+                contractInteractor.getSmartWalletAddress(
+                    'fake address',
+                    owner,
+                    recoverer,
+                    index
+                )
+            ).to.be.rejectedWith(
+                'Invalid address passed to ISmartWalletFactory.at():'
             );
         });
     });
 
     describe('getERC20Token', () => {
-        const testToken: Token = {
-            name: 'Test Token',
-            decimals: 18,
-            symbol: 'TKN',
-            contractAddress: address
-        };
+        let erc20Instance: ERC20Instance;
+        const tokenName = 'Test Token';
+        const tokenSymbol = 'TKN';
+        const tokenDecimals = 18;
+
+        beforeEach(function () {
+            erc20Instance = stubInterface<ERC20Instance>({
+                name: Promise.resolve(tokenName),
+                symbol: Promise.resolve(tokenSymbol),
+                decimals: Promise.resolve(new BN(tokenDecimals))
+            });
+            sinon
+                .stub(contractInteractor, '_createERC20')
+                .withArgs(address)
+                .returns(Promise.resolve(erc20Instance));
+        });
+
+        afterEach(function () {
+            sinon.restore();
+        });
 
         it('should return testToken', async () => {
-            const fakeERC20Instance = stubInterface<ERC20Instance>({
-                name: Promise.resolve(testToken.name),
-                symbol: Promise.resolve(testToken.symbol as string),
-                decimals: Promise.resolve(new BN(testToken.decimals as number))
-            });
-            stub(contractInteractor, '_createERC20')
-                .withArgs(address)
-                .returns(Promise.resolve(fakeERC20Instance));
-
-            const token = await contractInteractor.getERC20Token(address, {
-                symbol: true,
-                decimals: true
-            });
-            assert.equal(token.name, testToken.name, 'Token name mismatch');
-            assert.equal(
-                token.decimals,
-                testToken.decimals,
-                'Token decimals mismatch'
+            const token = await contractInteractor.getERC20Token(address);
+            expect(token.instance).to.be.equal(
+                erc20Instance,
+                'Instances are not equal'
             );
-            assert.equal(
-                token.symbol,
-                testToken.symbol,
-                'Token symbol mismatch'
-            );
-            (contractInteractor._createERC20 as SinonStub).restore();
         });
 
         it('should return token with specified properties', async () => {
-            const fakeERC20Instance = stubInterface<ERC20Instance>({
-                name: Promise.resolve(testToken.name),
-                symbol: Promise.resolve(testToken.symbol as string),
-                decimals: Promise.resolve(new BN(testToken.decimals as number))
+            const token = await contractInteractor.getERC20Token(address, {
+                name: true,
+                symbol: true,
+                decimals: true
             });
-            stub(contractInteractor, '_createERC20')
-                .withArgs(address)
-                .returns(Promise.resolve(fakeERC20Instance));
-
-            const token = await contractInteractor.getERC20Token(address);
-            assert.equal(token.name, testToken.name, 'Token name mismatch');
-            assert.equal(
-                token.decimals,
-                undefined,
-                'Token decimals should be undefined'
+            expect(token.name).to.be.equal(tokenName, 'Token name mismatch');
+            expect(token.decimals).to.be.equal(
+                tokenDecimals,
+                'Token decimals mismatch'
             );
-            assert.equal(
-                token.symbol,
-                undefined,
-                'Token symbol should be undefined'
-            );
-            (contractInteractor._createERC20 as SinonStub).restore();
-        });
-
-        it('should fail if address is null', async () => {
-            await assert.isRejected(
-                contractInteractor.getERC20Token(null),
-                'Invalid address passed to ERC20.at(): null'
+            expect(token.symbol).to.be.equal(
+                tokenSymbol,
+                'Token symbol mismatch'
             );
         });
     });
