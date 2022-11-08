@@ -33,12 +33,12 @@
   ],
   "main": "dist/index.js",
   "scripts": {
-    "build": "./scripts/build",
+    "dist": "scripts/dist",
     "format": "npx prettier test/**/*.ts src/**/*.ts !.gitignore  --list-different",
     "format:fix": "npm run format -- --write",
     "lint": "npx eslint --cache test/**/*.ts src/**/*.ts",
     "lint:fix": "npm run lint -- --fix",
-    "prepare": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\"",
+    "prepare": "scripts/prepare",
     "tdd": "npm run test -- --watch --watch-files src,test",
     "test": "npx mocha -r ts-node/register --extensions ts 'test/**/*.{test,spec}.ts'"
   },
