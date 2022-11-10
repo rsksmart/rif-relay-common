@@ -1,6 +1,6 @@
 import type {
     RelayHub
-  } from '@rsksmart/rif-relay-contracts/typechain-types';
+  } from '@rsksmart/rif-relay-contracts';
 
 export type EstimateGasParams = {
     from: string;

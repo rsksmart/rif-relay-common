@@ -7,18 +7,18 @@ import {
   DeployVerifier,
   DeployVerifier__factory,
   IForwarder__factory,
+  IRelayHub,
   IRelayHub__factory,
   IWalletFactory__factory,
   RelayHub,
   RelayHub__factory,
   RelayVerifier,
   RelayVerifier__factory,
-} from '@rsksmart/rif-relay-contracts/typechain-types';
-import type { TypedEvent } from '@rsksmart/rif-relay-contracts/typechain-types/common';
+} from '@rsksmart/rif-relay-contracts';
 import type {
   EnvelopingTypes,
-  IRelayHub,
-} from '@rsksmart/rif-relay-contracts/typechain-types/contracts/RelayHub';
+  TypedEvent
+} from '@rsksmart/rif-relay-contracts';
 import {
   BigNumber,
   BigNumberish,

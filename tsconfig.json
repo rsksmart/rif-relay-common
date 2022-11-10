@@ -14,5 +14,5 @@
     "extendedDiagnostics":true,
     "noErrorTruncation": true,
     "sourceMap": true
-  },
+  }
 }

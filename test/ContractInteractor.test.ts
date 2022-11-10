@@ -3,11 +3,11 @@ import {
   IForwarder,
   IForwarder__factory,
   RelayHub__factory,
-} from '@rsksmart/rif-relay-contracts/typechain-types';
+} from '@rsksmart/rif-relay-contracts';
 import type {
   EnvelopingTypes,
   RelayHub,
-} from '@rsksmart/rif-relay-contracts/typechain-types/contracts/RelayHub';
+} from '@rsksmart/rif-relay-contracts';
 import { expect, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { constants, ethers } from 'ethers';

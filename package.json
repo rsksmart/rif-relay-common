@@ -31,14 +31,17 @@
       "url": "https://github.com/jurajpiar"
     }
   ],
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
-    "build": "./scripts/build",
-    "format": "npx prettier test/**/*.ts src/**/*.ts !.gitignore  --list-different",
-    "format:fix": "npm run format -- --write",
+    "dist": "scripts/dist",
+    "format": "npx prettier test/**/*.ts src/**/*.ts !.gitignore  --check --ignore-unknown",
+    "format:fix": "npm run format -- --write --ignore-unknown",
     "lint": "npx eslint --cache test/**/*.ts src/**/*.ts",
     "lint:fix": "npm run lint -- --fix",
-    "prepare": "node -e \"try { require('husky').install() } catch (e) {if (e.code !== 'MODULE_NOT_FOUND') throw e}\"",
+    "prepack": "npmignore --auto",
+    "prepare": "scripts/prepare",
+    "prepublishOnly": "scripts/prepublishOnly",
     "tdd": "npm run test -- --watch --watch-files src,test",
     "test": "npx mocha -r ts-node/register --extensions ts 'test/**/*.{test,spec}.ts'"
   },
@@ -48,7 +51,7 @@
   },
   "dependencies": {
     "@metamask/eth-sig-util": "^5.0.0",
-    "@rsksmart/rif-relay-contracts": "github:rsksmart/rif-relay-contracts#feature/PP-278/PP-329/upgrade_contracts",
+    "@rsksmart/rif-relay-contracts": "github:rsksmart/rif-relay-contracts#feature/ethers/exposeDist-v2",
     "@types/config": "^3.3.0",
     "chalk": "~4.1.0",
     "ethers": "5.7.0",
