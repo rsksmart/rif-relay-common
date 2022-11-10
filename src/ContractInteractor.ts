@@ -17,7 +17,7 @@ import {
 } from '@rsksmart/rif-relay-contracts';
 import type {
   EnvelopingTypes,
-  TypedEvent
+  TypedEvent,
 } from '@rsksmart/rif-relay-contracts';
 import {
   BigNumber,
@@ -156,15 +156,18 @@ export default class ContractInteractor {
   }> {
     const relayHub = this._relayHub;
     const externalGasLimit: BigNumber = BigNumber.from(
-      await this.getMaxViewableRelayGasLimit(relayRequest, signature, relayWorker)
+      await this.getMaxViewableRelayGasLimit(
+        relayRequest,
+        signature,
+        relayWorker
+      )
     );
     if (externalGasLimit.eq(0)) {
       // The relayWorker does not have enough balance for this transaction
       return {
         verifierAccepted: false,
         reverted: false,
-        returnValue: `relayWorker ${relayWorker
-          } does not have enough balance to cover the maximum possible gas for this transaction`,
+        returnValue: `relayWorker ${relayWorker} does not have enough balance to cover the maximum possible gas for this transaction`,
         revertedInDestination: false,
       };
     }
@@ -180,8 +183,9 @@ export default class ContractInteractor {
       return {
         verifierAccepted: false,
         reverted: false,
-        returnValue: `view call to 'relayCall' reverted in verifier: ${message as string
-          }`,
+        returnValue: `view call to 'relayCall' reverted in verifier: ${
+          message as string
+        }`,
         revertedInDestination: false,
       };
     }
@@ -206,14 +210,18 @@ export default class ContractInteractor {
       return {
         verifierAccepted: true,
         reverted: true,
-        returnValue: `view call to 'relayCall' reverted in client: ${message as string
-          }`,
+        returnValue: `view call to 'relayCall' reverted in client: ${
+          message as string
+        }`,
         revertedInDestination: false,
       };
     }
   }
 
-  async validateAcceptDeployCall(request: DeployTransactionRequest, relayWorker: string): Promise<{
+  async validateAcceptDeployCall(
+    request: DeployTransactionRequest,
+    relayWorker: string
+  ): Promise<{
     verifierAccepted: boolean;
     returnValue: string;
     reverted: boolean;
@@ -247,8 +255,9 @@ export default class ContractInteractor {
       return {
         verifierAccepted: false,
         reverted: false,
-        returnValue: `view call to 'deploy call' reverted in verifier: ${message as string
-          }`,
+        returnValue: `view call to 'deploy call' reverted in verifier: ${
+          message as string
+        }`,
       };
     }
 
@@ -270,8 +279,9 @@ export default class ContractInteractor {
       return {
         verifierAccepted: true,
         reverted: true,
-        returnValue: `view call to 'deployCall' reverted in client: ${message as string
-          }`,
+        returnValue: `view call to 'deployCall' reverted in client: ${
+          message as string
+        }`,
       };
     }
   }
@@ -293,9 +303,9 @@ export default class ContractInteractor {
       request,
       relayWorker
     );
-    const workerBalanceAsUnitsOfGas = (
-      await this.getBalance(relayWorker)
-    ).div(BigNumber.from(gasPrice));
+    const workerBalanceAsUnitsOfGas = (await this.getBalance(relayWorker)).div(
+      BigNumber.from(gasPrice)
+    );
 
     return workerBalanceAsUnitsOfGas.gte(maxEstimatedGas) ? maxEstimatedGas : 0;
   }
@@ -324,11 +334,13 @@ export default class ContractInteractor {
     );
   }
 
-  async estimateRelayTransactionMaxPossibleGasWithTransactionRequest({
-    metadata: { relayHubAddress, signature },
-    relayRequest,
-  }: RelayTransactionRequest,
-    relayWorker: string): Promise<BigNumber> {
+  async estimateRelayTransactionMaxPossibleGasWithTransactionRequest(
+    {
+      metadata: { relayHubAddress, signature },
+      relayRequest,
+    }: RelayTransactionRequest,
+    relayWorker: string
+  ): Promise<BigNumber> {
     if (!relayHubAddress || relayHubAddress === constants.AddressZero) {
       throw new Error('calculateDeployCallGas: RelayHub must be defined');
     }
@@ -401,9 +413,9 @@ export default class ContractInteractor {
         signature,
         relayWorker
       );
-    const workerBalanceAsUnitsOfGas = (
-      await this.getBalance(relayWorker)
-    ).div(gasPrice as BigNumberish);
+    const workerBalanceAsUnitsOfGas = (await this.getBalance(relayWorker)).div(
+      gasPrice as BigNumberish
+    );
 
     return workerBalanceAsUnitsOfGas.gte(maxEstimatedGas) ? maxEstimatedGas : 0;
   }
@@ -544,11 +556,13 @@ export default class ContractInteractor {
       );
   }
 
-  async walletFactoryEstimateGasOfDeployCall({
-    relayRequest,
-    metadata: { relayHubAddress, signature },
-  }: DeployTransactionRequest,
-  relayWorker: string): Promise<BigNumber> {
+  async walletFactoryEstimateGasOfDeployCall(
+    {
+      relayRequest,
+      metadata: { relayHubAddress, signature },
+    }: DeployTransactionRequest,
+    relayWorker: string
+  ): Promise<BigNumber> {
     if (!relayHubAddress || relayHubAddress === constants.AddressZero) {
       throw new Error('calculateDeployCallGas: RelayHub must be defined');
     }
