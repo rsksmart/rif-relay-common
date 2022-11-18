@@ -5,7 +5,7 @@ import { BigNumber } from 'ethers';
 // const  TX_ZERO_DATA_GAS_COST: 4;
 // const TX_NO_ZERO_DATA_GAS_COST: 68;
 
-// const MAX_ESTIMATED_GAS_DEVIATION: 0.2;
+export const MAX_ESTIMATED_GAS_DEVIATION = 0.2;
 export const ESTIMATED_GAS_CORRECTION_FACTOR: BigNumber = BigNumber.from(1); // TODO: if needed put a correction factor to mitigate RSK node gas miscalculation if execution includes refunds
 export const INTERNAL_TRANSACTION_ESTIMATE_CORRECTION: BigNumber =
   BigNumber.from(20000); // When estimating the gas an internal call is going to spend; we need to substract some gas inherent to send the parameters to the blockchain
