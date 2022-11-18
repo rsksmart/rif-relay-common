@@ -13,12 +13,12 @@ import {
   RelayHub__factory,
   RelayVerifier,
   RelayVerifier__factory,
-} from '@rsksmart/rif-relay-contracts/dist/typechain-types';
-import type { TypedEvent } from '@rsksmart/rif-relay-contracts/dist/typechain-types/common';
+} from '@rsksmart/rif-relay-contracts';
 import type {
+  TypedEvent,
   EnvelopingTypes,
   IRelayHub,
-} from '@rsksmart/rif-relay-contracts/dist/typechain-types/contracts/RelayHub';
+} from '@rsksmart/rif-relay-contracts';
 import {
   BigNumber,
   BigNumberish,
@@ -152,7 +152,8 @@ export default class ContractInteractor {
 
   async validateAcceptRelayCall(
     relayRequest: EnvelopingTypes.RelayRequestStruct,
-    signature: string
+    signature: string,
+    relayWorker: string
   ): Promise<{
     verifierAccepted: boolean;
     returnValue: string;
@@ -161,19 +162,18 @@ export default class ContractInteractor {
   }> {
     const relayHub = this._relayHub;
     const externalGasLimit: BigNumber = BigNumber.from(
-      await this.getMaxViewableRelayGasLimit(relayRequest, signature)
-    );
-    const feesReceiver = this.provider.getSigner(
-      relayRequest.relayData.feesReceiver as string
+      await this.getMaxViewableRelayGasLimit(
+        relayRequest,
+        signature,
+        relayWorker
+      )
     );
     if (externalGasLimit.eq(0)) {
-      // The feesReceiver does not have enough balance for this transaction
+      // The relayWorker does not have enough balance for this transaction
       return {
         verifierAccepted: false,
         reverted: false,
-        returnValue: `feesReceiver ${
-          relayRequest.relayData.feesReceiver as string
-        } does not have enough balance to cover the maximum possible gas for this transaction`,
+        returnValue: `relayWorker ${relayWorker} does not have enough balance to cover the maximum possible gas for this transaction`,
         revertedInDestination: false,
       };
     }
@@ -181,7 +181,7 @@ export default class ContractInteractor {
     // First call the verifier
     try {
       await this._relayVerifier
-        .connect(feesReceiver)
+        .connect(relayWorker)
         .verifyRelayedCall(relayRequest, signature, {
           // defaultBlock: 'pending' // FIXME: suppose to be set to pending (not sure why tho?), but ethers has no such overriode
         });
@@ -199,7 +199,7 @@ export default class ContractInteractor {
     // If the verified passed, try relaying the transaction (in local view call)
     try {
       const res = await relayHub
-        .connect(feesReceiver)
+        .connect(relayWorker)
         .relayCall(relayRequest, signature, {
           gasPrice: relayRequest.relayData.gasPrice,
           gasLimit: externalGasLimit,
@@ -224,14 +224,17 @@ export default class ContractInteractor {
     }
   }
 
-  async validateAcceptDeployCall(request: DeployTransactionRequest): Promise<{
+  async validateAcceptDeployCall(
+    request: DeployTransactionRequest,
+    relayWorker: string
+  ): Promise<{
     verifierAccepted: boolean;
     returnValue: string;
     reverted: boolean;
   }> {
     const relayHub = this._relayHub;
     const externalGasLimit = BigNumber.from(
-      await this.getMaxViewableDeployGasLimit(request)
+      await this.getMaxViewableDeployGasLimit(request, relayWorker)
     );
 
     const {
@@ -239,23 +242,20 @@ export default class ContractInteractor {
       metadata: { signature },
     } = request;
     const { relayData } = relayRequest;
-    const feesReceiver = this.provider.getSigner(
-      relayData.feesReceiver as string
-    );
 
     if (externalGasLimit.eq(0)) {
-      // The feesReceiver does not have enough balance for this transaction
+      // The relayWorker does not have enough balance for this transaction
       return {
         verifierAccepted: false,
         reverted: false,
-        returnValue: `feesReceiver ${feesReceiver._address} does not have enough balance to cover the maximum possible gas for this transaction`,
+        returnValue: `relayWorker ${relayWorker} does not have enough balance to cover the maximum possible gas for this transaction`,
       };
     }
 
     // First call the verifier
     try {
       await this._deployVerifier
-        .connect(feesReceiver)
+        .connect(relayWorker)
         .verifyRelayedCall(relayRequest, signature);
     } catch ({ message }) {
       return {
@@ -270,7 +270,7 @@ export default class ContractInteractor {
     // If the verified passed, try relaying the transaction (in local view call)
     try {
       const res = await relayHub
-        .connect(feesReceiver)
+        .connect(relayWorker)
         .deployCall(relayRequest, signature, {
           gasPrice: relayData.gasPrice,
           gasLimit: externalGasLimit,
@@ -293,11 +293,12 @@ export default class ContractInteractor {
   }
 
   async getMaxViewableDeployGasLimit(
-    request: DeployTransactionRequest
+    request: DeployTransactionRequest,
+    relayWorker: string
   ): Promise<BigNumberish> {
     const { relayRequest } = request;
     const {
-      relayData: { gasPrice, feesReceiver },
+      relayData: { gasPrice },
     } = relayRequest;
 
     if (BigNumber.from(gasPrice).eq(0)) {
@@ -305,25 +306,27 @@ export default class ContractInteractor {
     }
 
     const maxEstimatedGas = await this.walletFactoryEstimateGasOfDeployCall(
-      request
+      request,
+      relayWorker
     );
-    const workerBalanceAsUnitsOfGas = (
-      await this.getBalance(feesReceiver as string)
-    ).div(BigNumber.from(gasPrice));
+    const workerBalanceAsUnitsOfGas = (await this.getBalance(relayWorker)).div(
+      BigNumber.from(gasPrice)
+    );
 
     return workerBalanceAsUnitsOfGas.gte(maxEstimatedGas) ? maxEstimatedGas : 0;
   }
 
   async estimateRelayTransactionMaxPossibleGas(
     relayRequest: EnvelopingTypes.RelayRequestStruct,
-    signature: string
+    signature: string,
+    relayWorker: string
   ): Promise<BigNumber> {
     const encodedTargetCall = this._relayHub.interface.encodeFunctionData(
       'relayCall',
       [relayRequest, signature]
     );
     const maxPossibleGas = await this.provider.estimateGas({
-      from: relayRequest.relayData.feesReceiver,
+      from: relayWorker,
       to: relayRequest.request.relayHub,
       data: encodedTargetCall,
       gasPrice: relayRequest.relayData.gasPrice,
@@ -337,19 +340,22 @@ export default class ContractInteractor {
     );
   }
 
-  async estimateRelayTransactionMaxPossibleGasWithTransactionRequest({
-    metadata: { relayHubAddress, signature },
-    relayRequest,
-  }: RelayTransactionRequest): Promise<BigNumber> {
+  async estimateRelayTransactionMaxPossibleGasWithTransactionRequest(
+    {
+      metadata: { relayHubAddress, signature },
+      relayRequest,
+    }: RelayTransactionRequest,
+    relayWorker: string
+  ): Promise<BigNumber> {
     if (!relayHubAddress || relayHubAddress === constants.AddressZero) {
       throw new Error('calculateDeployCallGas: RelayHub must be defined');
     }
     const {
-      relayData: { feesReceiver, gasPrice },
+      relayData: { gasPrice },
     } = relayRequest;
     const rHub = IRelayHub__factory.connect(relayHubAddress, this._provider);
     const maxPossibleGas = await rHub
-      .connect(feesReceiver as string)
+      .connect(relayWorker)
       .estimateGas.relayCall(relayRequest, signature, {
         gasPrice: gasPrice,
       });
@@ -396,24 +402,26 @@ export default class ContractInteractor {
 
   async getMaxViewableRelayGasLimit(
     relayRequest: EnvelopingTypes.RelayRequestStruct,
-    signature: string
+    signature: string,
+    relayWorker: string
   ): Promise<BigNumberish> {
     const {
-      relayData: { gasPrice, feesReceiver },
+      relayData: { gasPrice },
     } = relayRequest;
 
-    if (!BigNumber.from(gasPrice).eq(0)) {
+    if (!BigNumber.from(gasPrice).eq(constants.Zero)) {
       0;
     }
 
     const maxEstimatedGas: BigNumber =
       await this.estimateRelayTransactionMaxPossibleGas(
         relayRequest,
-        signature
+        signature,
+        relayWorker
       );
-    const workerBalanceAsUnitsOfGas = (
-      await this.getBalance(feesReceiver as string)
-    ).div(gasPrice as BigNumberish);
+    const workerBalanceAsUnitsOfGas = (await this.getBalance(relayWorker)).div(
+      gasPrice as BigNumberish
+    );
 
     return workerBalanceAsUnitsOfGas.gte(maxEstimatedGas) ? maxEstimatedGas : 0;
   }
@@ -555,21 +563,24 @@ export default class ContractInteractor {
       );
   }
 
-  async walletFactoryEstimateGasOfDeployCall({
-    relayRequest,
-    metadata: { relayHubAddress, signature },
-  }: DeployTransactionRequest): Promise<BigNumber> {
+  async walletFactoryEstimateGasOfDeployCall(
+    {
+      relayRequest,
+      metadata: { relayHubAddress, signature },
+    }: DeployTransactionRequest,
+    relayWorker: string
+  ): Promise<BigNumber> {
     if (!relayHubAddress || relayHubAddress === constants.AddressZero) {
       throw new Error('calculateDeployCallGas: RelayHub must be defined');
     }
     const rHub = IRelayHub__factory.connect(relayHubAddress, this.provider);
 
     const {
-      relayData: { feesReceiver, gasPrice },
+      relayData: { gasPrice },
     } = relayRequest;
 
     return rHub
-      .connect(feesReceiver as string)
+      .connect(relayWorker)
       .estimateGas.deployCall(relayRequest, signature, { gasPrice });
   }
 

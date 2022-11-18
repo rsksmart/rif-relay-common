@@ -1,14 +1,11 @@
 import { JsonRpcProvider } from '@ethersproject/providers/lib';
-import type { JsonRpcSigner } from '@ethersproject/providers/src.ts/json-rpc-provider';
+import type { JsonRpcSigner } from '@ethersproject/providers';
 import {
   IForwarder,
   IForwarder__factory,
   RelayHub__factory,
-} from '@rsksmart/rif-relay-contracts/dist/typechain-types';
-import type {
-  EnvelopingTypes,
-  RelayHub,
-} from '@rsksmart/rif-relay-contracts/dist/typechain-types/contracts/RelayHub';
+} from '@rsksmart/rif-relay-contracts';
+import type { EnvelopingTypes, RelayHub } from '@rsksmart/rif-relay-contracts';
 import { expect, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { constants, ethers } from 'ethers';
