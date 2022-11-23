@@ -34,9 +34,9 @@
   "main": "dist/index.js",
   "scripts": {
     "dist": "scripts/dist",
-    "format": "npx prettier test/**/*.ts src/**/*.ts !.gitignore  --list-different",
+    "format": "npx prettier \"{,test/**/}*.ts\" \"{,src/**/}*.ts\" index.ts !.gitignore  --list-different --no-editorconfig",
     "format:fix": "npm run format -- --write",
-    "lint": "npx eslint --cache test/**/*.ts src/**/*.ts",
+    "lint": "npx eslint --cache \"{,test/**/}*.ts\" \"{,src/**/}*.ts\"",
     "lint:fix": "npm run lint -- --fix",
     "prepare": "scripts/prepare",
     "tdd": "npm run test -- --watch --watch-files src,test",
