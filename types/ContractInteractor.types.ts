@@ -25,3 +25,7 @@ export type DefaultManagerEvent = Extract<
   | 'TransactionRelayed'
   | 'TransactionRelayedButRevertedByRecipient'
 >;
+
+type ManagerEventMethods = RelayHub['filters'][ManagerEvent];
+
+export type ManagerEventParameters = Parameters<ManagerEventMethods>;

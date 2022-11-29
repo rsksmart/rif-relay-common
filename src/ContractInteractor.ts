@@ -41,6 +41,7 @@ import type {
   DefaultManagerEvent,
   EstimateGasParams,
   ManagerEvent,
+  ManagerEventParameters,
   PastEventOptions,
 } from 'types/ContractInteractor.types';
 
@@ -464,15 +465,17 @@ export default class ContractInteractor {
   }
 
   async getPastEventsForHub(
-    { fromBlock, toBlock }: PastEventOptions, // PastEventOptions
+    parameters: ManagerEventParameters,
+    { fromBlock, toBlock }: PastEventOptions,
     names: ManagerEvent[] = DEFAULT_MANAGER_EVENTS
   ): Promise<Array<TypedEvent>> {
     const eventFilters = await Promise.all(
       names.map((name) => {
-        const filter = this._relayHub.filters[name];
-        const definedFilter = filter() as Omit<typeof filter, 'undefined'>;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const filter = this._relayHub.filters[name](...parameters);
 
-        return this._relayHub.queryFilter(definedFilter, fromBlock, toBlock);
+        return this._relayHub.queryFilter(filter, fromBlock, toBlock);
       })
     );
 
