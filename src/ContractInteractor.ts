@@ -36,22 +36,14 @@ import {
   INTERNAL_TRANSACTION_ESTIMATE_CORRECTION,
 } from './constants';
 import VersionsManager from './VersionsManager';
-
-export interface EstimateGasParams {
-  from: string;
-  to: string;
-  data: string;
-  gasPrice?: string;
-}
-
-type ManagerEvent = keyof RelayHub['filters'];
-type DefaultManagerEvent = Extract<
+import type {
+  BlockTag,
+  DefaultManagerEvent,
+  EstimateGasParams,
   ManagerEvent,
-  | 'RelayServerRegistered'
-  | 'RelayWorkersAdded'
-  | 'TransactionRelayed'
-  | 'TransactionRelayedButRevertedByRecipient'
->;
+  ManagerEventParameters,
+  PastEventOptions,
+} from 'types/ContractInteractor.types';
 
 const DEFAULT_MANAGER_EVENTS: DefaultManagerEvent[] = [
   'RelayServerRegistered',
@@ -70,6 +62,10 @@ export default class ContractInteractor {
   private _deployVerifier: DeployVerifier;
 
   private _relayHub: RelayHub;
+
+  public get relayHub(): RelayHub {
+    return this._relayHub;
+  }
 
   private readonly _provider: JsonRpcProvider;
 
@@ -469,24 +465,26 @@ export default class ContractInteractor {
   }
 
   async getPastEventsForHub(
-    { fromBlock, toBlock }: { fromBlock?: number; toBlock?: number }, // PastEventOptions
+    parameters: ManagerEventParameters,
+    { fromBlock, toBlock }: PastEventOptions,
     names: ManagerEvent[] = DEFAULT_MANAGER_EVENTS
-  ): Promise<Array<Array<TypedEvent>>> {
+  ): Promise<Array<TypedEvent>> {
     const eventFilters = await Promise.all(
       names.map((name) => {
-        const filter = this._relayHub.filters[name];
-        const definedFilter = filter as Omit<typeof filter, 'undefined'>;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const filter = this._relayHub.filters[name](...parameters);
 
-        return this._relayHub.queryFilter(definedFilter, fromBlock, toBlock);
+        return this._relayHub.queryFilter(filter, fromBlock, toBlock);
       })
     );
 
-    return eventFilters;
+    return eventFilters.flat();
   }
 
   async getBalance(
     address: string,
-    atBlock: number | 'latest' | 'pending' | 'earliest' = 'latest'
+    atBlock: BlockTag = 'latest'
   ): Promise<BigNumber> {
     return await this.provider.getBalance(address, atBlock);
   }
@@ -497,7 +495,7 @@ export default class ContractInteractor {
 
   async getTransactionCount(
     address: string,
-    defaultBlock?: number
+    defaultBlock?: BlockTag
   ): Promise<number> {
     //  (web3 does not define 'defaultBlock' as optional)
     return await this.provider.getTransactionCount(address, defaultBlock);
@@ -507,7 +505,7 @@ export default class ContractInteractor {
     return await this.provider.getTransaction(transactionHash);
   }
 
-  async getBlock(blockHashOrBlockNumber: number): Promise<Block> {
+  async getBlock(blockHashOrBlockNumber: BlockTag): Promise<Block> {
     return await this.provider.getBlock(blockHashOrBlockNumber);
   }
 
