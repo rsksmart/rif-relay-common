@@ -1,6 +1,6 @@
 {
   "name": "@rsksmart/rif-relay-common",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "description": "This project contains all the common code for the rif relay system.",
   "main": "dist/index.js",
   "scripts": {
@@ -30,7 +30,7 @@
     "@openeth/truffle-typings": "0.0.6",
     "@openzeppelin/contracts": "~3.2.0",
     "@truffle/abi-utils": "~0.2.3",
-    "@rsksmart/rif-relay-contracts": "1.0.0-alpha.2",
+    "@rsksmart/rif-relay-contracts": "1.0.0-alpha.4",
     "@truffle/contract": "~4.2.23",
     "bn.js": "5.1.2",
     "chalk": "~4.1.0",
