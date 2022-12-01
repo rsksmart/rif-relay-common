@@ -1,6 +1,6 @@
 {
   "name": "@rsksmart/rif-relay-common",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "description": "This project contains all the common code for the rif relay system.",
   "main": "dist/index.js",
   "scripts": {
