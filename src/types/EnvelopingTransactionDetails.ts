@@ -56,4 +56,5 @@ export default interface EnvelopingTransactionDetails {
 
     retries?: number;
     initialBackoff?: number;
+    validUntilTime: string;
 }
