@@ -1,5 +1,5 @@
 
-export default interface EnvelopingTransactionDetails {
+export interface EnvelopingTransactionDetails {
   // Added by the Web3 call stack:
   readonly from: string;
   readonly data: string;
