@@ -49,7 +49,8 @@ describe('ContractInteractor', () => {
         forwarderAddress: constants.ZERO_ADDRESS,
         smartWalletFactoryAddress: constants.ZERO_ADDRESS,
         logLevel: 0,
-        clientId: '1'
+        clientId: '1',
+        requestValidSeconds: 0
     };
     let mockWeb3Provider: Web3Provider;
     let contractInteractor: ContractInteractor;
