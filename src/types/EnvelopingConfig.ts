@@ -24,4 +24,5 @@ export interface EnvelopingConfig {
     smartWalletFactoryAddress: string;
     chainId: number;
     clientId: string;
+    requestValidSeconds: number;
 }
